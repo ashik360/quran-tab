@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -117,7 +117,7 @@
           </div>
 
           <!-- Modal for selecting Surah and Ayah -->
-          <div id="ayahSelectModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0;
+          <div id="ayahSelectModal" style="display: none; position: fixed; z-index: 100001; left: 0; top: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
             <div class="modal-content" style="background: #cbeded; padding: 20px; border-radius: 8px; max-width: 320px; width: 90%;">
               <h3>Select Ayah</h3>
@@ -160,7 +160,6 @@
         <span class="material-icons">close</span>
       </button>
       <div class="audio-mode-title">অডিও মোড</div>
-      <div class="audio-mode-time" id="audioModeTime">০০:০০ / ০০:০০</div>
     </div>
 
     <div class="audio-mode-main">
@@ -182,8 +181,8 @@
               <circle class="progress-ring__circle" cx="150" cy="150" r="140"></circle>
             </svg>
           </div>
-          <div class="surah-circle-inner">
-            <div class="calligraphy">﷽</div>
+          <div class="surah-circle-inner" id="audioSurahTrigger" title="Select Surah & Ayah">
+            <div class="surah-name-arabic" id="audioSurahArabic">الفاتحة</div>
             <div class="surah-name-bengali" id="audioSurahBengali">সূরা আল-ফাতিহা</div>
             <div class="current-ayah" id="currentAyahNumber">আয়াত ১</div>
           </div>
@@ -208,7 +207,7 @@
           <label class="switch">
             <input type="checkbox" id="audioAutoplayToggle" />
             <span class="slider"></span>
-            <span class="label-text">স্বয়ংক্রিয়</span>
+            <span class="label-text">স্বয়ংক্রিয়</span>
           </label>
         </div>
       </div>
@@ -254,12 +253,12 @@
         </div>
 
         <div class="audio-progress-container">
-          <div class="progress-time" id="currentTime">০০:০০</div>
+          <div class="progress-time" id="currentTime">à§¦à§¦:à§¦à§¦</div>
           <div class="progress-bar-container">
             <input type="range" id="audioProgress" min="0" max="100" value="0" class="progress-slider">
             <div class="progress-fill"></div>
           </div>
-          <div class="progress-time" id="totalTime">০০:০০</div>
+          <div class="progress-time" id="totalTime">à§¦à§¦:à§¦à§¦</div>
         </div>
 
         <div class="reciter-info">
@@ -290,10 +289,36 @@
       </div>
     </div>
 
-    <!-- Speed Control Modal -->
+    <div class="audio-ayah-drawer" id="audioAyahDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <div class="drawer-title">সুরা ও আয়াত</div>
+        <button class="icon-btn small" id="audioAyahClose" title="Close">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="drawer-body">
+        <select id="audioChapterSelect" style="width: 100%; margin-top: 10px;"></select>
+        <select id="audioVerseSelect" style="width: 100%; margin-top: 10px;"></select>
+        <button id="audioGoToAyahBtn" style="margin-top: 10px; width: 100%;">Go</button>
+        <button id="audioCancelAyahBtn" style="margin-top: 5px; width: 100%;">Cancel</button>
+      </div>
+    </div>
+
+    <div class="audio-side-drawer" id="audioSideDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <div class="drawer-title" id="audioDrawerTitle">তাফসীর</div>
+        <button class="icon-btn small" id="audioDrawerClose" title="Close">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="drawer-body" id="audioDrawerBody">
+        শীঘ্রই আসছে
+      </div>
+    </div>
+
     <div class="speed-modal" id="speedModal">
       <div class="speed-options">
-        <div class="speed-title">পঠন গতি</div>
+        <div class="speed-title">পাঠের গতি</div>
         <button class="speed-option" data-speed="0.5">0.5x</button>
         <button class="speed-option" data-speed="0.75">0.75x</button>
         <button class="speed-option active" data-speed="1">1x</button>

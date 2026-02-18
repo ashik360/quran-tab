@@ -5,7 +5,8 @@ let currentVerse = {
   verse: 1,
   translation: 'bn.bengali',
   audioEdition: 'ar.shaatree',
-  bitrate: '128'
+  bitrate: '128',
+  surahArabicName: 'الفاتحة'
 };
 
 let isAutoplayEnabled = false;
@@ -205,8 +206,14 @@ const elements = {
   currentTime: document.getElementById('currentTime'),
   totalTime: document.getElementById('totalTime'),
   audioModeTime: document.getElementById('audioModeTime'),
+  audioSurahArabic: document.getElementById('audioSurahArabic'),
   audioSurahBengali: document.getElementById('audioSurahBengali'),
+  audioSurahTrigger: document.getElementById('audioSurahTrigger'),
   currentAyahNumber: document.getElementById('currentAyahNumber'),
+  audioSideDrawer: document.getElementById('audioSideDrawer'),
+  audioDrawerTitle: document.getElementById('audioDrawerTitle'),
+  audioDrawerBody: document.getElementById('audioDrawerBody'),
+  audioDrawerClose: document.getElementById('audioDrawerClose'),
   audioReciterName: document.getElementById('audioReciterName'),
   speedModal: document.getElementById('speedModal'),
   sleepModal: document.getElementById('sleepModal'),
@@ -214,6 +221,12 @@ const elements = {
   audioTranslationBtn: document.getElementById('audioTranslationBtn'),
   audioReciterDropdown: document.getElementById('audioReciterDropdown'),
   audioTranslationDropdown: document.getElementById('audioTranslationDropdown'),
+  audioAyahDrawer: document.getElementById('audioAyahDrawer'),
+  audioAyahClose: document.getElementById('audioAyahClose'),
+  audioChapterSelect: document.getElementById('audioChapterSelect'),
+  audioVerseSelect: document.getElementById('audioVerseSelect'),
+  audioGoToAyahBtn: document.getElementById('audioGoToAyahBtn'),
+  audioCancelAyahBtn: document.getElementById('audioCancelAyahBtn'),
   audioAutoplayToggle: document.getElementById('audioAutoplayToggle')
 };
 
@@ -270,13 +283,14 @@ async function getSurahAyahCount(chapter) {
 }
 
 // ==================== VERSE LOADING ====================
-async function loadVerse(chapter, verse, showLoader = true) {
+async function loadVerse(chapter, verse, showLoader = true, resumeAudio = false) {
   if (isLoading) return;
   isLoading = true;
   if (showLoader) showLoading(true);
   updateProgressBar(30);
 
   try {
+    const wasPlaying = isAudioMode && !elements.audioPlayer.paused;
     const [arabicRes, transRes] = await Promise.all([
       fetch(`https://api.alquran.cloud/v1/ayah/${chapter}:${verse}/ar.alafasy`),
       fetch(`https://api.alquran.cloud/v1/ayah/${chapter}:${verse}/editions/${currentVerse.translation}`)
@@ -292,9 +306,13 @@ async function loadVerse(chapter, verse, showLoader = true) {
 
     currentVerse.chapter = chapter;
     currentVerse.verse = verse;
+    currentVerse.surahArabicName = arabicData.data.surah.name || '';
 
     updateProgressBar(70);
     await loadAudioByAyah(chapter, verse);
+    if (resumeAudio || wasPlaying) {
+      await elements.audioPlayer.play().catch(() => {});
+    }
     updateProgressBar(100);
 
     // Animate
@@ -305,7 +323,10 @@ async function loadVerse(chapter, verse, showLoader = true) {
       elements.verseTranslation.style.animation = 'fadeInUp 0.8s ease-out 0.2s both';
     }, 10);
 
-    if (isAudioMode) updateAudioModeDisplay();
+    if (isAudioMode) {
+      updateAudioModeDisplay();
+      updateAudioModeProgress();
+    }
   } catch (error) {
     console.error('Failed to load verse:', error);
     // fallback
@@ -314,6 +335,7 @@ async function loadVerse(chapter, verse, showLoader = true) {
     elements.verseInfo.textContent = 'Surah Al-Fatiha (1:1)';
     currentVerse.chapter = 1;
     currentVerse.verse = 1;
+    currentVerse.surahArabicName = 'الفاتحة';
     showNotification('Failed to load verse. Check connection.', 'error');
   } finally {
     isLoading = false;
@@ -510,26 +532,43 @@ async function populateSurahDropdown() {
     const res = await fetch('https://api.alquran.cloud/v1/surah');
     const data = await res.json();
     elements.chapterSelect.innerHTML = '';
+    if (elements.audioChapterSelect) elements.audioChapterSelect.innerHTML = '';
     data.data.forEach(surah => {
       const opt = document.createElement('option');
       opt.value = surah.number;
       opt.textContent = `${surah.number}. ${surah.englishName}`;
       elements.chapterSelect.appendChild(opt);
+      if (elements.audioChapterSelect) {
+        const opt2 = document.createElement('option');
+        opt2.value = surah.number;
+        opt2.textContent = `${surah.number}. ${surah.englishName}`;
+        elements.audioChapterSelect.appendChild(opt2);
+      }
     });
     elements.chapterSelect.value = currentVerse.chapter;
     await updateVerseSelect(currentVerse.chapter);
     elements.verseSelect.value = currentVerse.verse;
+    if (elements.audioChapterSelect) {
+      elements.audioChapterSelect.value = currentVerse.chapter;
+      await updateVerseSelectFor(elements.audioVerseSelect, currentVerse.chapter);
+      if (elements.audioVerseSelect) elements.audioVerseSelect.value = currentVerse.verse;
+    }
   } catch (error) { console.error('Error loading surah list:', error); }
 }
 
 async function updateVerseSelect(chapter) {
+  await updateVerseSelectFor(elements.verseSelect, chapter);
+}
+
+async function updateVerseSelectFor(selectEl, chapter) {
+  if (!selectEl) return;
   const count = await getSurahAyahCount(chapter);
-  elements.verseSelect.innerHTML = '';
+  selectEl.innerHTML = '';
   for (let v=1; v<=count; v++) {
     const opt = document.createElement('option');
     opt.value = v;
     opt.textContent = `Ayah ${v}`;
-    elements.verseSelect.appendChild(opt);
+    selectEl.appendChild(opt);
   }
 }
 
@@ -538,8 +577,10 @@ function enterAudioMode() {
   isAudioMode = true;
   elements.audioModeScreen.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('audio-mode-active');
   updateAudioModeDisplay();
   syncAudioUI();
+  syncAudioModeState();
   showNotification('অডিও মোড চালু হয়েছে');
 }
 
@@ -547,12 +588,19 @@ function exitAudioMode() {
   isAudioMode = false;
   elements.audioModeScreen.style.display = 'none';
   document.body.style.overflow = 'auto';
+  document.body.classList.remove('audio-mode-active');
   if (audioModeInterval) clearInterval(audioModeInterval);
 }
 
 function updateAudioModeDisplay() {
-  const bengaliName = bengaliSurahNames[currentVerse.chapter] || `সূরা ${currentVerse.chapter}`;
-  elements.audioSurahBengali.textContent = bengaliName;
+  const arabicName = currentVerse.surahArabicName || '';
+  if (elements.audioSurahArabic) {
+    elements.audioSurahArabic.textContent = arabicName ? `${arabicName}` : `سورة ${currentVerse.chapter}`;
+  }
+  if (elements.audioSurahBengali) {
+    const bengaliName = bengaliSurahNames[currentVerse.chapter] || `সূরা ${currentVerse.chapter}`;
+    elements.audioSurahBengali.textContent = bengaliName;
+  }
   elements.currentAyahNumber.textContent = `আয়াত ${currentVerse.verse}`;
   const reciterName = bengaliReciterNames[currentVerse.audioEdition] || currentVerse.audioEdition;
   elements.audioReciterName.textContent = reciterName;
@@ -563,37 +611,75 @@ function syncAudioUI() {
   elements.audioPlayer.addEventListener('timeupdate', handleTimeUpdate);
   elements.audioPlayer.removeEventListener('ended', handleAudioEnded);
   elements.audioPlayer.addEventListener('ended', handleAudioEnded);
+  elements.audioPlayer.removeEventListener('loadedmetadata', handleTimeUpdate);
+  elements.audioPlayer.addEventListener('loadedmetadata', handleTimeUpdate);
+  elements.audioPlayer.removeEventListener('durationchange', handleTimeUpdate);
+  elements.audioPlayer.addEventListener('durationchange', handleTimeUpdate);
+  elements.audioPlayer.removeEventListener('seeked', handleTimeUpdate);
+  elements.audioPlayer.addEventListener('seeked', handleTimeUpdate);
 }
 
 function handleTimeUpdate() {
   if (!isAudioMode) return;
+  updateAudioModeProgress();
+}
+
+function updateAudioModeProgress() {
   const audio = elements.audioPlayer;
-  if (!audio.duration) return;
-  const progress = audio.currentTime / audio.duration;
+  const duration = audio.duration || 0;
+  const progress = duration ? audio.currentTime / duration : 0;
   // Circle progress
   const circle = document.querySelector('.progress-ring__circle');
   const radius = 140;
   const circumference = 2 * Math.PI * radius;
-  circle.style.strokeDasharray = circumference;
-  circle.style.strokeDashoffset = circumference - progress * circumference;
+  if (circle) {
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = circumference - progress * circumference;
+  }
   // Slider and times
   const percent = progress * 100;
-  elements.audioProgress.value = percent;
-  document.querySelector('.progress-fill').style.width = `${percent}%`;
+  if (elements.audioProgress) elements.audioProgress.value = percent;
+  const progressFill = document.querySelector('.progress-fill');
+  if (progressFill) progressFill.style.width = `${percent}%`;
   elements.currentTime.textContent = formatTimeBangla(audio.currentTime);
-  elements.totalTime.textContent = formatTimeBangla(audio.duration);
-  elements.audioModeTime.textContent = `${formatTimeBangla(audio.currentTime)} / ${formatTimeBangla(audio.duration)}`;
+  elements.totalTime.textContent = formatTimeBangla(duration);
+  if (elements.audioModeTime) {
+    elements.audioModeTime.textContent = `${formatTimeBangla(audio.currentTime)} / ${formatTimeBangla(duration)}`;
+  }
+}
+
+function syncAudioModeState() {
+  if (!isAudioMode) return;
+  elements.playPauseIcon.textContent = elements.audioPlayer.paused ? 'play_arrow' : 'pause';
+  elements.audioVolume.value = Math.round(elements.audioPlayer.volume * 100);
+  if (elements.audioAutoPlay) {
+    if (isAutoplayEnabled) elements.audioAutoPlay.classList.add('active');
+    else elements.audioAutoPlay.classList.remove('active');
+  }
+  if (elements.audioAutoplayToggle) elements.audioAutoplayToggle.checked = isAutoplayEnabled;
+  updateAudioModeProgress();
 }
 
 function handleAudioEnded() {
   if (!isAudioMode) return;
   if (repeatMode === 'repeat-one') {
     elements.audioPlayer.currentTime = 0;
-    elements.audioPlayer.play();
+    elements.audioPlayer.play().catch(() => {});
+  } else if (repeatMode === 'repeat-all') {
+    setTimeout(async () => {
+      const count = await getSurahAyahCount(currentVerse.chapter);
+      if (currentVerse.chapter === 114 && currentVerse.verse === count) {
+        await loadVerse(1, 1, true, true);
+      } else if (currentVerse.verse < count) {
+        await loadVerse(currentVerse.chapter, currentVerse.verse + 1, true, true);
+      } else {
+        await loadVerse(currentVerse.chapter + 1, 1, true, true);
+      }
+    }, 500);
   } else if (isAutoplayEnabled) {
-    setTimeout(() => {
-      nextVerse();
-      if (!elements.audioPlayer.paused) elements.audioPlayer.play();
+    setTimeout(async () => {
+      await nextVerse();
+      elements.audioPlayer.play().catch(() => {});
     }, 500);
   }
 }
@@ -609,7 +695,7 @@ function formatTimeBangla(seconds) {
 
 function togglePlayPause() {
   if (elements.audioPlayer.paused) {
-    elements.audioPlayer.play();
+    elements.audioPlayer.play().catch(() => {});
     elements.playPauseIcon.textContent = 'pause';
   } else {
     elements.audioPlayer.pause();
@@ -717,6 +803,38 @@ function setupEventListeners() {
     elements.verseSelect.value = currentVerse.verse;
     elements.ayahModal.style.display = 'flex';
   });
+  if (elements.audioSurahTrigger) {
+    elements.audioSurahTrigger.addEventListener('click', async () => {
+      if (elements.audioChapterSelect) {
+        elements.audioChapterSelect.value = currentVerse.chapter;
+        await updateVerseSelectFor(elements.audioVerseSelect, currentVerse.chapter);
+        if (elements.audioVerseSelect) elements.audioVerseSelect.value = currentVerse.verse;
+        elements.audioAyahDrawer.classList.add('open');
+        elements.audioAyahDrawer.setAttribute('aria-hidden', 'false');
+      } else {
+        elements.chapterSelect.value = currentVerse.chapter;
+        await updateVerseSelect(currentVerse.chapter);
+        elements.verseSelect.value = currentVerse.verse;
+        elements.ayahModal.style.display = 'flex';
+      }
+    });
+  }
+  if (elements.currentAyahNumber) {
+    elements.currentAyahNumber.addEventListener('click', async () => {
+      if (elements.audioChapterSelect) {
+        elements.audioChapterSelect.value = currentVerse.chapter;
+        await updateVerseSelectFor(elements.audioVerseSelect, currentVerse.chapter);
+        if (elements.audioVerseSelect) elements.audioVerseSelect.value = currentVerse.verse;
+        elements.audioAyahDrawer.classList.add('open');
+        elements.audioAyahDrawer.setAttribute('aria-hidden', 'false');
+      } else {
+        elements.chapterSelect.value = currentVerse.chapter;
+        await updateVerseSelect(currentVerse.chapter);
+        elements.verseSelect.value = currentVerse.verse;
+        elements.ayahModal.style.display = 'flex';
+      }
+    });
+  }
   elements.goToAyahBtn.addEventListener('click', () => {
     const ch = parseInt(elements.chapterSelect.value);
     const v = parseInt(elements.verseSelect.value);
@@ -726,6 +844,26 @@ function setupEventListeners() {
   elements.cancelAyahBtn.addEventListener('click', () => elements.ayahModal.style.display = 'none');
   elements.chapterSelect.addEventListener('change', async () => {
     await updateVerseSelect(parseInt(elements.chapterSelect.value));
+  });
+  if (elements.audioChapterSelect) {
+    elements.audioChapterSelect.addEventListener('change', async () => {
+      await updateVerseSelectFor(elements.audioVerseSelect, parseInt(elements.audioChapterSelect.value));
+    });
+  }
+  elements.audioGoToAyahBtn?.addEventListener('click', () => {
+    const ch = parseInt(elements.audioChapterSelect.value);
+    const v = parseInt(elements.audioVerseSelect.value);
+    loadVerse(ch, v);
+    elements.audioAyahDrawer.classList.remove('open');
+    elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
+  });
+  elements.audioCancelAyahBtn?.addEventListener('click', () => {
+    elements.audioAyahDrawer.classList.remove('open');
+    elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
+  });
+  elements.audioAyahClose?.addEventListener('click', () => {
+    elements.audioAyahDrawer.classList.remove('open');
+    elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
   });
 
   // Google Apps
@@ -831,6 +969,23 @@ function setupEventListeners() {
     if (savedDropdown && !elements.savedBtn.contains(e.target) && !savedDropdown.contains(e.target)) {
       savedDropdown.style.display = 'none';
     }
+    if (elements.audioSideDrawer) {
+      const clickedDrawer = e.target.closest('#audioSideDrawer');
+      const clickedTafseer = e.target.closest('#showTafseer');
+      const clickedTranslation = e.target.closest('#showTranslation');
+      if (!clickedDrawer && !clickedTafseer && !clickedTranslation) {
+        elements.audioSideDrawer.classList.remove('open');
+        elements.audioSideDrawer.setAttribute('aria-hidden', 'true');
+      }
+    }
+    if (elements.audioAyahDrawer) {
+      const clickedAyahDrawer = e.target.closest('#audioAyahDrawer');
+      const clickedAyahTrigger = e.target.closest('#audioSurahTrigger') || e.target.closest('#currentAyahNumber');
+      if (!clickedAyahDrawer && !clickedAyahTrigger) {
+        elements.audioAyahDrawer.classList.remove('open');
+        elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
+      }
+    }
   });
 
   // Play/pause icon sync
@@ -842,8 +997,6 @@ function setupEventListeners() {
   });
 
   // Additional controls in audio mode footer
-  document.getElementById('showTafseer')?.addEventListener('click', () => showNotification('তাফসীর শীঘ্রই আসছে', 'info'));
-  document.getElementById('showTranslation')?.addEventListener('click', () => showNotification('অনুবাদ মোড শীঘ্রই আসছে', 'info'));
   document.getElementById('bookmarkAudio')?.addEventListener('click', saveCurrentAyah);
   document.getElementById('shareAudio')?.addEventListener('click', () => {
     if (navigator.share) {
@@ -855,6 +1008,25 @@ function setupEventListeners() {
     } else {
       showNotification('শেয়ার করা সমর্থিত নয়', 'error');
     }
+  });
+
+  const openAudioDrawer = (title, bodyText) => {
+    if (!elements.audioSideDrawer) return;
+    elements.audioDrawerTitle.textContent = title;
+    elements.audioDrawerBody.textContent = bodyText;
+    elements.audioSideDrawer.classList.add('open');
+    elements.audioSideDrawer.setAttribute('aria-hidden', 'false');
+  };
+
+  document.getElementById('showTafseer')?.addEventListener('click', () => {
+    openAudioDrawer('তাফসীর', 'শীঘ্রই আসছে');
+  });
+  document.getElementById('showTranslation')?.addEventListener('click', () => {
+    openAudioDrawer('অনুবাদ', 'শীঘ্রই আসছে');
+  });
+  elements.audioDrawerClose?.addEventListener('click', () => {
+    elements.audioSideDrawer?.classList.remove('open');
+    elements.audioSideDrawer?.setAttribute('aria-hidden', 'true');
   });
 
   // Audio mode autoplay toggle
@@ -870,6 +1042,24 @@ function setupEventListeners() {
       if (elements.autoplayToggle) elements.autoplayToggle.checked = isAutoplayEnabled;
     });
   }
+
+  // Audio mode menu drawer
+  if (elements.audioMenuBtn && elements.audioMenuDrawer) {
+    elements.audioMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = elements.audioMenuDrawer.classList.contains('open');
+      if (isOpen) elements.audioMenuDrawer.classList.remove('open');
+      else elements.audioMenuDrawer.classList.add('open');
+    });
+  }
+  document.getElementById('drawerTafseer')?.addEventListener('click', () => {
+    elements.audioMenuDrawer?.classList.remove('open');
+    showNotification('তাফসীর শীঘ্রই আসছে', 'info');
+  });
+  document.getElementById('drawerTranslation')?.addEventListener('click', () => {
+    elements.audioMenuDrawer?.classList.remove('open');
+    showNotification('অনুবাদ মোড শীঘ্রই আসছে', 'info');
+  });
 }
 
 // ==================== INITIALIZATION ====================

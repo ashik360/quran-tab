@@ -506,7 +506,7 @@ body {
 #ayahSelectModal {
   display: none;
   position: fixed;
-  z-index: 9999;
+  z-index: 100001;
   left: 0;
   top: 0;
   width: 100%;
@@ -516,6 +516,16 @@ body {
   justify-content: center;
 }
 
+.audio-mode-active #ayahSelectModal {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 90px 20px 20px 20px;
+}
+
+.audio-mode-active #ayahSelectModal .modal-content {
+  margin-left: 20px;
+}
+
 .modal-content {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   padding: 2rem;
@@ -523,6 +533,7 @@ body {
   max-width: 400px;
   width: 90%;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  z-index: 10000;
 }
 
 /* ==================== AUDIO MODE ==================== */
@@ -604,6 +615,7 @@ body {
   text-align: center;
   z-index: 2;
   width: 200px;
+  cursor: pointer;
 }
 
 .calligraphy {
@@ -625,6 +637,21 @@ body {
   text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
+.surah-name-arabic {
+  font-family: 'Amiri', serif;
+  font-size: 2.2rem;
+  color: #e2e8f0;
+  margin: 6px 0 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.surah-circle-inner:hover .surah-name-arabic,
+.surah-circle-inner:hover .surah-name-bengali {
+  color: #e0f2fe;
+}
+
 .current-ayah {
   font-family: 'Noto Sans Bengali', sans-serif;
   font-size: 1.5rem;
@@ -636,6 +663,7 @@ body {
   border: 1px solid rgba(34,211,238,0.5);
   backdrop-filter: blur(5px);
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  cursor: pointer;
 }
 
 .circle-progress {
@@ -888,6 +916,70 @@ body {
   background: rgba(0,0,0,0.3);
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.audio-side-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(320px, 90vw);
+  background: rgba(2, 6, 23, 0.98);
+  border-left: 1px solid rgba(255,255,255,0.12);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 100000;
+  box-shadow: -12px 0 30px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+}
+
+.audio-side-drawer.open {
+  transform: translateX(0);
+}
+
+.audio-ayah-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: min(340px, 92vw);
+  background: rgba(2, 6, 23, 0.98);
+  border-right: 1px solid rgba(255,255,255,0.12);
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 100000;
+  box-shadow: 12px 0 30px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+}
+
+.audio-ayah-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.drawer-title {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 1.2rem;
+  color: #e2e8f0;
+}
+
+.drawer-body {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.6;
 }
 
 .additional-controls {
