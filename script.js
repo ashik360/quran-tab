@@ -20,6 +20,8 @@ let isAudioMode = false;
 let audioModeInterval;
 let sleepTimer = null;
 let repeatMode = 'none'; // 'none', 'repeat-one', 'repeat-all'
+const ayahDetailsCache = new Map();
+const ayahTafsirCache = new Map();
 
 // Bengali Surah Names
 const bengaliSurahNames = {
@@ -556,6 +558,124 @@ async function populateSurahDropdown() {
   } catch (error) { console.error('Error loading surah list:', error); }
 }
 
+function escapeHtml(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeTafsirText(text) {
+  return String(text || '')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1');
+}
+
+function hasBengaliText(text) {
+  return /[\u0980-\u09FF]/.test(String(text || ''));
+}
+
+function isBengaliKeyPath(keyPath) {
+  const p = String(keyPath || '').toLowerCase();
+  return p.includes('bangla') || p.includes('bengali') || p.includes('.bn') || p.endsWith('bn');
+}
+
+function extractBestTafsirText(payload) {
+  if (!payload || typeof payload !== 'object') return '';
+
+  const ibnKathirBn = [];
+  const preferredBn = [];
+  const fallbackBn = [];
+  const seen = new Set();
+  const stack = [{ path: '', value: payload }];
+
+  while (stack.length) {
+    const { path, value } = stack.pop();
+    if (value == null) continue;
+
+    if (typeof value === 'string') {
+      const text = normalizeTafsirText(value).trim();
+      if (!text || seen.has(text)) continue;
+      seen.add(text);
+
+      const keyPath = path.toLowerCase();
+      const isPreferredKey =
+        keyPath.includes('tafsir') ||
+        isBengaliKeyPath(keyPath) ||
+        keyPath.includes('marif') ||
+        keyPath.includes('kathir') ||
+        keyPath.includes('maududi') ||
+        keyPath.includes('explain') ||
+        keyPath.includes('comment');
+      const isIbnKathirBn = keyPath.includes('kathir') && isBengaliKeyPath(keyPath);
+
+      if (hasBengaliText(text)) {
+        let targetBn = fallbackBn;
+        if (isIbnKathirBn) targetBn = ibnKathirBn;
+        else if (isPreferredKey) targetBn = preferredBn;
+        targetBn.push(text);
+      }
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        stack.push({ path: `${path}[${index}]`, value: item });
+      });
+      continue;
+    }
+
+    if (typeof value === 'object') {
+      Object.entries(value).forEach(([key, child]) => {
+        const nextPath = path ? `${path}.${key}` : key;
+        stack.push({ path: nextPath, value: child });
+      });
+    }
+  }
+
+  const pickLongest = (items) => items.sort((a, b) => b.length - a.length)[0] || '';
+  // Bengali-only preference for drawer output.
+  return pickLongest(ibnKathirBn) || pickLongest(preferredBn) || pickLongest(fallbackBn) || '';
+}
+
+async function getAyahDetails(chapter, verse) {
+  const key = `${chapter}:${verse}`;
+  if (ayahDetailsCache.has(key)) return ayahDetailsCache.get(key);
+  const res = await fetch(`https://quranapi.pages.dev/api/${chapter}/${verse}.json`);
+  if (!res.ok) throw new Error('Failed ayah details request');
+  const data = await res.json();
+  ayahDetailsCache.set(key, data);
+  return data;
+}
+
+async function getAyahTafsir(chapter, verse) {
+  const key = `${chapter}:${verse}`;
+  if (ayahTafsirCache.has(key)) return ayahTafsirCache.get(key);
+
+  const urls = [
+    `https://raw.githubusercontent.com/spa5k/tafsir_api/main/tafsir/bn-tafseer-ibn-e-kaseer/${chapter}/${verse}.json`,
+    `https://cdn.statically.io/gh/spa5k/tafsir_api/main/tafsir/bn-tafseer-ibn-e-kaseer/${chapter}/${verse}.json`
+  ];
+
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Failed tafsir request: ${res.status}`);
+      const data = await res.json();
+      ayahTafsirCache.set(key, data);
+      return data;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('Failed tafsir request');
+}
+
 async function updateVerseSelect(chapter) {
   await updateVerseSelectFor(elements.verseSelect, chapter);
 }
@@ -1010,19 +1130,71 @@ function setupEventListeners() {
     }
   });
 
-  const openAudioDrawer = (title, bodyText) => {
+  const openAudioDrawer = (title, bodyHtml) => {
     if (!elements.audioSideDrawer) return;
     elements.audioDrawerTitle.textContent = title;
-    elements.audioDrawerBody.textContent = bodyText;
+    elements.audioDrawerBody.innerHTML = bodyHtml;
     elements.audioSideDrawer.classList.add('open');
     elements.audioSideDrawer.setAttribute('aria-hidden', 'false');
   };
 
+  const openTafsirDrawer = async () => {
+    openAudioDrawer('তাফসীর', '<div class="drawer-loading">লোড হচ্ছে...</div>');
+    try {
+      const [ayahDetails, tafsirData] = await Promise.all([
+        getAyahDetails(currentVerse.chapter, currentVerse.verse),
+        getAyahTafsir(currentVerse.chapter, currentVerse.verse)
+      ]);
+
+      const arabic = escapeHtml(ayahDetails?.arabic1 || elements.verseArabic.textContent);
+      const bengali = escapeHtml(ayahDetails?.bengali || elements.verseTranslation.textContent);
+      const ref = `(${currentVerse.chapter}:${currentVerse.verse})`;
+      const tafsirTextRaw = normalizeTafsirText(tafsirData?.text || '');
+      const tafsirText = escapeHtml(tafsirTextRaw || 'বাংলা তাফসীর পাওয়া যায়নি।');
+
+      openAudioDrawer(
+        'তাফসীর',
+        `
+          <div class="drawer-ayah-arabic">${arabic}</div>
+          <div class="drawer-ayah-bengali">${bengali}</div>
+          <div class="drawer-ayah-ref">${ref}</div>
+          <hr class="drawer-separator" />
+          <div class="drawer-tafsir-text">${tafsirText}</div>
+        `
+      );
+    } catch (error) {
+      console.error('Tafsir drawer load error:', error);
+      openAudioDrawer('তাফসীর', '<div class="drawer-error">তথ্য লোড করা যায়নি।</div>');
+    }
+  };
+
+  const openTranslationDrawer = async () => {
+    openAudioDrawer('অনুবাদ', '<div class="drawer-loading">লোড হচ্ছে...</div>');
+    try {
+      const ayahDetails = await getAyahDetails(currentVerse.chapter, currentVerse.verse);
+      const arabic = escapeHtml(ayahDetails?.arabic1 || elements.verseArabic.textContent);
+      const bengali = escapeHtml(ayahDetails?.bengali || elements.verseTranslation.textContent);
+      const ref = `(${currentVerse.chapter}:${currentVerse.verse})`;
+
+      openAudioDrawer(
+        'অনুবাদ',
+        `
+          <div class="drawer-ayah-arabic">${arabic}</div>
+          <div class="drawer-ayah-bengali">${bengali}</div>
+          <div class="drawer-ayah-ref">${ref}</div>
+        `
+      );
+    } catch (error) {
+      console.error('Translation drawer load error:', error);
+      openAudioDrawer('অনুবাদ', '<div class="drawer-error">তথ্য লোড করা যায়নি।</div>');
+    }
+  };
+
   document.getElementById('showTafseer')?.addEventListener('click', () => {
-    openAudioDrawer('তাফসীর', 'শীঘ্রই আসছে');
+    openTafsirDrawer();
   });
   document.getElementById('showTranslation')?.addEventListener('click', () => {
-    openAudioDrawer('অনুবাদ', 'শীঘ্রই আসছে');
+    openTranslationDrawer();
   });
   elements.audioDrawerClose?.addEventListener('click', () => {
     elements.audioSideDrawer?.classList.remove('open');
@@ -1043,23 +1215,6 @@ function setupEventListeners() {
     });
   }
 
-  // Audio mode menu drawer
-  if (elements.audioMenuBtn && elements.audioMenuDrawer) {
-    elements.audioMenuBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = elements.audioMenuDrawer.classList.contains('open');
-      if (isOpen) elements.audioMenuDrawer.classList.remove('open');
-      else elements.audioMenuDrawer.classList.add('open');
-    });
-  }
-  document.getElementById('drawerTafseer')?.addEventListener('click', () => {
-    elements.audioMenuDrawer?.classList.remove('open');
-    showNotification('তাফসীর শীঘ্রই আসছে', 'info');
-  });
-  document.getElementById('drawerTranslation')?.addEventListener('click', () => {
-    elements.audioMenuDrawer?.classList.remove('open');
-    showNotification('অনুবাদ মোড শীঘ্রই আসছে', 'info');
-  });
 }
 
 // ==================== INITIALIZATION ====================

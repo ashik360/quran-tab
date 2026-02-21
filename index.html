@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <div class="container">
     <header class="header">
@@ -30,7 +32,8 @@
           <div class="bookmark-input">
             <input type="text" required id="bookmarkTitle" placeholder="Title">
             <input type="url" required id="bookmarkURL" value="https://" placeholder="https://example.com">
-            <button style="display: flex; flex-direction: column; align-items: center;" id="addBookmarkBtn" title="Add Bookmark">
+            <button style="display: flex; flex-direction: column; align-items: center;" id="addBookmarkBtn"
+              title="Add Bookmark">
               <span class="material-icons mi-white">add</span>
               <span class="icon-txt">Add A New Bookmark</span>
             </button>
@@ -119,7 +122,8 @@
           <!-- Modal for selecting Surah and Ayah -->
           <div id="ayahSelectModal" style="display: none; position: fixed; z-index: 100001; left: 0; top: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
-            <div class="modal-content" style="background: #cbeded; padding: 20px; border-radius: 8px; max-width: 320px; width: 90%;">
+            <div class="modal-content"
+              style="background: #cbeded; padding: 20px; border-radius: 8px; max-width: 320px; width: 90%;">
               <h3>Select Ayah</h3>
               <select id="chapterSelect" style="width: 100%; margin-top: 10px;"></select>
               <select id="verseSelect" style="width: 100%; margin-top: 10px;"></select>
@@ -160,6 +164,9 @@
         <span class="material-icons">close</span>
       </button>
       <div class="audio-mode-title">অডিও মোড</div>
+      <button id="exitAudioMode" class="icon-btn">
+        <span class="material-icons">close</span>
+      </button>
     </div>
 
     <div class="audio-mode-main">
@@ -192,23 +199,32 @@
       <!-- Reciter & Translation selectors (same as main screen) -->
       <div class="audio-mode-selectors">
         <div class="custom-dropdown audio-mode-dropdown">
-          <button id="audioReciterBtn" class="icon-btn small" title="Select Reciter">
+          <button id="audioReciterBtn" class="control-btn small" title="Select Reciter">
             <span class="material-icons">headphones</span>
           </button>
           <ul class="dropdown-menu" id="audioReciterDropdown"></ul>
         </div>
+
         <div class="custom-dropdown audio-mode-dropdown">
-          <button id="audioTranslationBtn" class="icon-btn small" title="Select Translation">
+          <button id="audioTranslationBtn" class="control-btn small" title="Select Translation">
             <span class="material-icons">translate</span>
           </button>
           <ul class="dropdown-menu" id="audioTranslationDropdown"></ul>
         </div>
-        <div class="autoplay-toggle audio-autoplay">
-          <label class="switch">
-            <input type="checkbox" id="audioAutoplayToggle" />
-            <span class="slider"></span>
-            <span class="label-text">স্বয়ংক্রিয়</span>
-          </label>
+
+        <div class="control-row">
+          <button id="audioRepeatShuffle" class="control-btn small" title="Repeat & Shuffle">
+            <span class="material-icons" title="পুনরাবৃত্তি">repeat</span>
+          </button>
+          <button id="audioAutoPlay" class="control-btn small active" title="Auto Play Next/স্বয়ংক্রিয়">
+            <span class="material-icons">play_circle_filled</span>
+          </button>
+          <button id="audioSpeed" class="control-btn small" title="Playback Speed">
+            <span class="material-icons" title="গতি">speed</span>
+          </button>
+          <button id="audioSleep" class="control-btn small" title="Sleep Timer">
+            <span class="material-icons" title="টাইমার">timer</span>
+          </button>
         </div>
       </div>
 
@@ -223,25 +239,6 @@
           </button>
           <button id="audioNext" class="control-btn large">
             <span class="material-icons">skip_next</span>
-          </button>
-        </div>
-
-        <div class="control-row">
-          <button id="audioRepeatShuffle" class="control-btn small" title="Repeat & Shuffle">
-            <span class="material-icons">repeat</span>
-            <span class="control-label">পুনরাবৃত্তি</span>
-          </button>
-          <button id="audioAutoPlay" class="control-btn small active" title="Auto Play Next">
-            <span class="material-icons">play_circle_filled</span>
-            <span class="control-label">স্বয়ংক্রিয়</span>
-          </button>
-          <button id="audioSpeed" class="control-btn small" title="Playback Speed">
-            <span class="material-icons">speed</span>
-            <span class="control-label">গতি</span>
-          </button>
-          <button id="audioSleep" class="control-btn small" title="Sleep Timer">
-            <span class="material-icons">timer</span>
-            <span class="control-label">টাইমার</span>
           </button>
         </div>
 
@@ -345,4 +342,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
