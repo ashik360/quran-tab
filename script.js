@@ -1190,9 +1190,15 @@ function setupEventListeners() {
     }
   };
 
+  
   document.getElementById('showTafseer')?.addEventListener('click', () => {
     openTafsirDrawer();
   });
+  
+  document.getElementById('showTafseerFooter')?.addEventListener('click', () => {
+    openTafsirDrawer();
+  });
+  
   document.getElementById('showTranslation')?.addEventListener('click', () => {
     openTranslationDrawer();
   });
