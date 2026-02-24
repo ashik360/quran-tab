@@ -143,7 +143,7 @@ const bengaliSurahNames = {
 
 // Bengali Reciter Names
 const bengaliReciterNames = {
-  'ar.shaatree': 'আবু বকর আশ-শাতেরী',
+  'ar.shaatree': 'আবু বকর আশ-শাত্রী',
   'ar.ahmedajamy': 'আহমেদ ইবনে আলী আল-আজামী',
   'ar.alafasy': 'আল-আফাসী',
   'ar.abdurrahmaansudais': 'আব্দুর রহমান আস-সুদাইস',
@@ -987,10 +987,10 @@ function setupEventListeners() {
   });
 
   // Google Apps
-  elements.googleAppsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    elements.appsDropdown.style.display = elements.appsDropdown.style.display === 'grid' ? 'none' : 'grid';
-  });
+  // elements.googleAppsBtn.addEventListener('click', (e) => {
+  //   e.stopPropagation();
+  //   elements.appsDropdown.style.display = elements.appsDropdown.style.display === 'grid' ? 'none' : 'grid';
+  // });
 
   // Bookmarks
   elements.bookmarkBtn.addEventListener('click', (e) => {
@@ -1304,7 +1304,7 @@ async function initializeApp() {
 
   // Populate audio mode dropdowns (same data)
   populateDropdown('audioReciterDropdown', [
-    { code: 'ar.shaatree', label: 'আবু বকর আশ-শাতেরী' },
+    { code: 'ar.shaatree', label: 'আবু বকর আশ-শাত্রী' },
     { code: 'ar.ahmedajamy', label: 'আহমেদ ইবনে আলী আল-আজামী' },
     { code: 'ar.alafasy', label: 'আল-আফাসী' },
     { code: 'ar.abdurrahmaansudais', label: 'আব্দুর রহমান আস-সুদাইস' },

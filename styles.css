@@ -293,11 +293,11 @@ body {
   z-index: 1001;
 }
 
-.bookmark-container { top: 120px; left: 20px; }
-.google-apps-container { top: 120px; right: 20px; }
+.bookmark-container { top: 105px; left: 20px; }
+.google-apps-container { top: 105px; right: 20px; }
 .saved-container { bottom: 100px; left: 20px; }
 .favourite-container { bottom: 100px; right: 20px; }
-.audio-mode-container { bottom: 100px; right: 80px; }
+.audio-mode-container { top: 105px; right: 20px; }
 
 /* DROPDOWN STYLES */
 .bookmark-dropdown,
@@ -1192,7 +1192,10 @@ body {
   .control-btn.large { width: 60px; height: 60px; font-size: 1.8rem; }
   .control-btn.small { width: 45px; height: 45px; font-size: 1.1rem; }
   .additional-controls { gap: 15px; }
-  .info-btn { padding: 5px 10px; font-size: 0.7rem; }
+  .info-btn { padding: 5px 10px; font-size: 0.7rem; }  
+  .audio-ayah-drawer,.audio-side-drawer { width: min(65%, 92vw); }
+  .verse-arabic{ overflow-y: auto; }
+  .verse-container{ min-width: 102%; overflow-y: auto; }
 }
 
 @media screen and (max-width: 480px) {
@@ -1203,4 +1206,21 @@ body {
   .current-ayah { font-size: 1rem; }
   .audio-mode-controls { gap: 15px; }
   .volume-control { max-width: 220px; }
+  .audio-ayah-drawer,.audio-side-drawer { width: min(65%, 92vw); }
+  .verse-arabic{ overflow-y: auto; }
+  .verse-container{ min-width: 102%; overflow-y: auto; }
+}
+
+/* ========== DropDown Fix ========== */
+
+.custom-dropdown {
+  position: relative!important;
+}
+
+.dropdown-menu {
+  position: absolute!important;
+  bottom: 100%!important;     /* places it above the button */
+  top: auto!important;        /* overrides any top value */
+  margin-left: -235px!important;
+  margin-bottom: 8px!important;
 }
