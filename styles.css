@@ -1195,7 +1195,7 @@ body {
   .info-btn { padding: 5px 10px; font-size: 0.7rem; }  
   .audio-ayah-drawer,.audio-side-drawer { width: min(65%, 92vw); }
   .verse-arabic{ overflow-y: auto; }
-  .verse-container{ min-width: 102%; overflow-y: auto; }
+  .verse-container{ min-width: 110%; overflow-y: auto; }
 }
 
 @media screen and (max-width: 480px) {
@@ -1208,7 +1208,7 @@ body {
   .volume-control { max-width: 220px; }
   .audio-ayah-drawer,.audio-side-drawer { width: min(65%, 92vw); }
   .verse-arabic{ overflow-y: auto; }
-  .verse-container{ min-width: 102%; overflow-y: auto; }
+  .verse-container{ min-width: 110%; overflow-y: auto; }
 }
 
 /* ========== DropDown Fix ========== */
