@@ -199,7 +199,8 @@ const elements = {
   playPauseIcon: document.getElementById('playPauseIcon'),
   audioPrev: document.getElementById('audioPrev'),
   audioNext: document.getElementById('audioNext'),
-  audioRepeatShuffle: document.getElementById('audioRepeatShuffle'),
+  audioRepeat: document.getElementById('audioRepeat'),
+  audioShuffle: document.getElementById('audioShuffle'),
   audioAutoPlay: document.getElementById('audioAutoPlay'),
   audioSpeed: document.getElementById('audioSpeed'),
   audioSleep: document.getElementById('audioSleep'),
@@ -313,7 +314,7 @@ async function loadVerse(chapter, verse, showLoader = true, resumeAudio = false)
     updateProgressBar(70);
     await loadAudioByAyah(chapter, verse);
     if (resumeAudio || wasPlaying) {
-      await elements.audioPlayer.play().catch(() => {});
+      await elements.audioPlayer.play().catch(() => { });
     }
     updateProgressBar(100);
 
@@ -353,7 +354,7 @@ async function loadAudioByAyah(chapter, verse) {
     elements.audioPlayer.src = `https://cdn.islamic.network/quran/audio/${currentVerse.bitrate}/${currentVerse.audioEdition}/${ayahNum}.mp3`;
     elements.audioPlayer.load();
     if (isAutoplayEnabled) {
-      await elements.audioPlayer.play().catch(() => {});
+      await elements.audioPlayer.play().catch(() => { });
     }
   } catch (error) {
     console.error('Audio load error:', error);
@@ -376,24 +377,58 @@ async function prevVerse() {
 }
 
 async function nextVerse() {
+
+  // ✅ If shuffle is ON → load random verse
+  if (shuffleMode === 'shuffle') {
+    await loadRandomVerse();
+
+    if (isAudioMode && !elements.audioPlayer.paused) {
+      elements.audioPlayer.play().catch(() => { });
+    }
+    return;
+  }
+
+  // ✅ Normal sequential logic
   const count = await getSurahAyahCount(currentVerse.chapter);
+
   if (currentVerse.verse < count) {
     await loadVerse(currentVerse.chapter, currentVerse.verse + 1);
   } else if (currentVerse.chapter < 114) {
     await loadVerse(currentVerse.chapter + 1, 1);
   }
+
   if (isAudioMode && !elements.audioPlayer.paused) {
-    elements.audioPlayer.play();
+    elements.audioPlayer.play().catch(() => { });
   }
 }
+
+let shuffleMode = 'none';
+let currentVerseIndex = 0;
+let verses = []; // Your verses array
+let isPlaying = false;
 
 async function loadRandomVerse() {
   const chapter = Math.floor(Math.random() * 114) + 1;
   const count = await getSurahAyahCount(chapter);
   const verse = Math.floor(Math.random() * count) + 1;
-  await loadVerse(chapter, verse);
-  showNotification('Loaded random verse!');
+
+  await loadVerse(chapter, verse, true, true);
+
+  if (isAudioMode) {
+    elements.audioPlayer.play().catch(() => {});
+  }
 }
+
+async function playNextVerse() {
+  if (shuffleMode === 'shuffle') {
+    await loadRandomVerse();
+  } else {
+    // Sequential playback
+    currentVerseIndex = (currentVerseIndex + 1) % verses.length;
+    await loadVerse(verses[currentVerseIndex].chapter, verses[currentVerseIndex].verse);
+  }
+}
+
 
 // ==================== DROPDOWN FUNCTIONS ====================
 function populateDropdown(dropdownId, items, handler) {
@@ -432,7 +467,7 @@ function renderBookmarks() {
     li.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;';
     const link = document.createElement('a');
     link.href = bm.url;
-    link.textContent = bm.title.length > 30 ? bm.title.substring(0,30)+'...' : bm.title;
+    link.textContent = bm.title.length > 30 ? bm.title.substring(0, 30) + '...' : bm.title;
     link.target = '_blank';
     link.style.cssText = 'color:#1a73e8;text-decoration:none;flex:1;margin-right:10px;';
     const delBtn = document.createElement('button');
@@ -684,7 +719,7 @@ async function updateVerseSelectFor(selectEl, chapter) {
   if (!selectEl) return;
   const count = await getSurahAyahCount(chapter);
   selectEl.innerHTML = '';
-  for (let v=1; v<=count; v++) {
+  for (let v = 1; v <= count; v++) {
     const opt = document.createElement('option');
     opt.value = v;
     opt.textContent = `Ayah ${v}`;
@@ -784,7 +819,7 @@ function handleAudioEnded() {
   if (!isAudioMode) return;
   if (repeatMode === 'repeat-one') {
     elements.audioPlayer.currentTime = 0;
-    elements.audioPlayer.play().catch(() => {});
+    elements.audioPlayer.play().catch(() => { });
   } else if (repeatMode === 'repeat-all') {
     setTimeout(async () => {
       const count = await getSurahAyahCount(currentVerse.chapter);
@@ -797,9 +832,18 @@ function handleAudioEnded() {
       }
     }, 500);
   } else if (isAutoplayEnabled) {
+
     setTimeout(async () => {
-      await nextVerse();
-      elements.audioPlayer.play().catch(() => {});
+
+      // ✅ Shuffle takes priority
+      if (shuffleMode === 'shuffle') {
+        await loadRandomVerse();
+      } else {
+        await nextVerse();
+      }
+
+      elements.audioPlayer.play().catch(() => { });
+
     }, 500);
   }
 }
@@ -808,14 +852,14 @@ function formatTimeBangla(seconds) {
   if (isNaN(seconds)) return '০০:০০';
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  const bengaliDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   const toBangla = num => num.toString().split('').map(d => bengaliDigits[parseInt(d)]).join('');
-  return `${toBangla(mins.toString().padStart(2,'0'))}:${toBangla(secs.toString().padStart(2,'0'))}`;
+  return `${toBangla(mins.toString().padStart(2, '0'))}:${toBangla(secs.toString().padStart(2, '0'))}`;
 }
 
 function togglePlayPause() {
   if (elements.audioPlayer.paused) {
-    elements.audioPlayer.play().catch(() => {});
+    elements.audioPlayer.play().catch(() => { });
     elements.playPauseIcon.textContent = 'pause';
   } else {
     elements.audioPlayer.pause();
@@ -853,7 +897,7 @@ function setSleepTimer(minutes) {
 }
 
 function toggleRepeatMode() {
-  const btn = elements.audioRepeatShuffle;
+  const btn = elements.audioRepeat;
   const icon = btn.querySelector('.material-icons');
   if (repeatMode === 'none') {
     repeatMode = 'repeat-one';
@@ -870,6 +914,39 @@ function toggleRepeatMode() {
     icon.textContent = 'repeat';
     btn.querySelector('.control-label').textContent = 'পুনরাবৃত্তি';
     showNotification('পুনরাবৃত্তি বন্ধ');
+  }
+}
+
+
+function toggleShuffleMode() {
+  const btn = elements.audioShuffle;
+  const icon = btn.querySelector('.material-icons');
+
+  if (shuffleMode === 'none') {
+    shuffleMode = 'shuffle';
+    btn.classList.add('active');
+    localStorage.setItem('shuffleMode', 'shuffle');
+    showNotification('শাফল চালু');
+
+    // 🔥 Immediately jump to random verse
+    loadRandomVerse();
+
+  } else {
+    shuffleMode = 'none';
+    btn.classList.remove('active');
+    localStorage.setItem('shuffleMode', 'none');
+    showNotification('শাফল বন্ধ');
+  }
+}
+
+// Load shuffle mode from storage on page load
+function initShuffleMode() {
+  const saved = localStorage.getItem('shuffleMode');
+  if (saved) {
+    shuffleMode = saved;
+    if (shuffleMode === 'shuffle') {
+      elements.audioShuffle.classList.add('active');
+    }
   }
 }
 
@@ -1034,7 +1111,8 @@ function setupEventListeners() {
   elements.audioNext.addEventListener('click', nextVerse);
   elements.audioProgress.addEventListener('input', (e) => seekAudio(e.target.value));
   elements.audioVolume.addEventListener('input', (e) => setAudioVolume(e.target.value));
-  elements.audioRepeatShuffle.addEventListener('click', toggleRepeatMode);
+  elements.audioRepeat.addEventListener('click', toggleRepeatMode);
+  elements.audioShuffle.addEventListener('click', toggleShuffleMode);
   elements.audioAutoPlay.addEventListener('click', toggleAutoPlay);
   elements.audioSpeed.addEventListener('click', () => elements.speedModal.style.display = 'block');
   elements.audioSleep.addEventListener('click', () => elements.sleepModal.style.display = 'block');
@@ -1049,7 +1127,7 @@ function setupEventListeners() {
 
   // Speed options
   document.querySelectorAll('.speed-option').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
       const speed = parseFloat(this.dataset.speed);
       changeAudioSpeed(speed);
       document.querySelectorAll('.speed-option').forEach(b => b.classList.remove('active'));
@@ -1060,7 +1138,7 @@ function setupEventListeners() {
 
   // Sleep options
   document.querySelectorAll('.sleep-option').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
       const minutes = parseInt(this.dataset.minutes);
       setSleepTimer(minutes);
       elements.sleepModal.style.display = 'none';
@@ -1124,7 +1202,7 @@ function setupEventListeners() {
         title: 'Quran Tab',
         text: `${elements.verseArabic.textContent} - ${elements.verseTranslation.textContent}`,
         url: window.location.href
-      }).catch(() => {});
+      }).catch(() => { });
     } else {
       showNotification('শেয়ার করা সমর্থিত নয়', 'error');
     }
@@ -1190,15 +1268,15 @@ function setupEventListeners() {
     }
   };
 
-  
+
   document.getElementById('showTafseer')?.addEventListener('click', () => {
     openTafsirDrawer();
   });
-  
+
   document.getElementById('showTafseerFooter')?.addEventListener('click', () => {
     openTafsirDrawer();
   });
-  
+
   document.getElementById('showTranslation')?.addEventListener('click', () => {
     openTranslationDrawer();
   });
