@@ -20,6 +20,7 @@ let isAudioMode = false;
 let audioModeInterval;
 let sleepTimer = null;
 let repeatMode = 'none'; // 'none', 'repeat-one', 'repeat-all'
+let shuffleMode = 'none'; // 'none', 'shuffle'
 const ayahDetailsCache = new Map();
 const ayahTafsirCache = new Map();
 
@@ -236,8 +237,10 @@ const elements = {
 // ==================== UTILITY FUNCTIONS ====================
 function showLoading(show = true) {
   const overlay = document.getElementById('loadingOverlay');
-  if (show) overlay.classList.add('show');
-  else overlay.classList.remove('show');
+  if (overlay) {
+    if (show) overlay.classList.add('show');
+    else overlay.classList.remove('show');
+  }
 }
 
 function showNotification(message, type = 'success') {
@@ -293,14 +296,25 @@ async function loadVerse(chapter, verse, showLoader = true, resumeAudio = false)
   updateProgressBar(30);
 
   try {
-    const wasPlaying = isAudioMode && !elements.audioPlayer.paused;
-    const [arabicRes, transRes] = await Promise.all([
-      fetch(`https://api.alquran.cloud/v1/ayah/${chapter}:${verse}/ar.alafasy`),
-      fetch(`https://api.alquran.cloud/v1/ayah/${chapter}:${verse}/editions/${currentVerse.translation}`)
-    ]);
-    if (!arabicRes.ok || !transRes.ok) throw new Error('API error');
+    // Attempt to fetch Arabic with a retry
+    let arabicData;
+    let attempts = 0;
+    const maxAttempts = 2;
+    while (attempts < maxAttempts) {
+      try {
+        const arabicRes = await fetch(`https://api.alquran.cloud/v1/ayah/${chapter}:${verse}/ar.alafasy`);
+        if (!arabicRes.ok) throw new Error('Arabic fetch failed');
+        arabicData = await arabicRes.json();
+        break;
+      } catch (err) {
+        attempts++;
+        if (attempts === maxAttempts) throw err;
+        await new Promise(resolve => setTimeout(resolve, 500)); // wait before retry
+      }
+    }
 
-    const arabicData = await arabicRes.json();
+    const transRes = await fetch(`https://api.alquran.cloud/v1/ayah/${chapter}:${verse}/editions/${currentVerse.translation}`);
+    if (!transRes.ok) throw new Error('Translation API error');
     const transData = await transRes.json();
 
     elements.verseArabic.textContent = arabicData.data.text;
@@ -313,7 +327,7 @@ async function loadVerse(chapter, verse, showLoader = true, resumeAudio = false)
 
     updateProgressBar(70);
     await loadAudioByAyah(chapter, verse);
-    if (resumeAudio || wasPlaying) {
+    if (resumeAudio || (isAutoplayEnabled && !elements.audioPlayer.paused)) {
       await elements.audioPlayer.play().catch(() => { });
     }
     updateProgressBar(100);
@@ -332,14 +346,14 @@ async function loadVerse(chapter, verse, showLoader = true, resumeAudio = false)
     }
   } catch (error) {
     console.error('Failed to load verse:', error);
-    // fallback
-    elements.verseArabic.textContent = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
-    elements.verseTranslation.textContent = 'In the name of Allah, the Most Gracious, the Most Merciful.';
-    elements.verseInfo.textContent = 'Surah Al-Fatiha (1:1)';
-    currentVerse.chapter = 1;
-    currentVerse.verse = 1;
-    currentVerse.surahArabicName = 'الفاتحة';
-    showNotification('Failed to load verse. Check connection.', 'error');
+    // Fallback - show a generic message but preserve ability to change
+    elements.verseArabic.textContent = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'; // fallback
+    elements.verseTranslation.textContent = 'অনুবাদ লোড হয়নি। সংযোগ পরীক্ষা করুন।';
+    elements.verseInfo.textContent = `Surah ${chapter} : ${verse}`;
+    currentVerse.chapter = chapter;
+    currentVerse.verse = verse;
+    currentVerse.surahArabicName = bengaliSurahNames[chapter] || '';
+    showNotification('আয়াত লোড করতে সমস্যা হয়েছে। সংযোগ পরীক্ষা করুন।', 'error');
   } finally {
     isLoading = false;
     if (showLoader) showLoading(false);
@@ -358,7 +372,7 @@ async function loadAudioByAyah(chapter, verse) {
     }
   } catch (error) {
     console.error('Audio load error:', error);
-    showNotification('Failed to load audio', 'error');
+    showNotification('অডিও লোড করতে ব্যর্থ', 'error');
   }
 }
 
@@ -377,20 +391,15 @@ async function prevVerse() {
 }
 
 async function nextVerse() {
-
-  // ✅ If shuffle is ON → load random verse
   if (shuffleMode === 'shuffle') {
     await loadRandomVerse();
-
     if (isAudioMode && !elements.audioPlayer.paused) {
       elements.audioPlayer.play().catch(() => { });
     }
     return;
   }
 
-  // ✅ Normal sequential logic
   const count = await getSurahAyahCount(currentVerse.chapter);
-
   if (currentVerse.verse < count) {
     await loadVerse(currentVerse.chapter, currentVerse.verse + 1);
   } else if (currentVerse.chapter < 114) {
@@ -402,33 +411,15 @@ async function nextVerse() {
   }
 }
 
-let shuffleMode = 'none';
-let currentVerseIndex = 0;
-let verses = []; // Your verses array
-let isPlaying = false;
-
 async function loadRandomVerse() {
   const chapter = Math.floor(Math.random() * 114) + 1;
   const count = await getSurahAyahCount(chapter);
   const verse = Math.floor(Math.random() * count) + 1;
-
   await loadVerse(chapter, verse, true, true);
-
   if (isAudioMode) {
     elements.audioPlayer.play().catch(() => {});
   }
 }
-
-async function playNextVerse() {
-  if (shuffleMode === 'shuffle') {
-    await loadRandomVerse();
-  } else {
-    // Sequential playback
-    currentVerseIndex = (currentVerseIndex + 1) % verses.length;
-    await loadVerse(verses[currentVerseIndex].chapter, verses[currentVerseIndex].verse);
-  }
-}
-
 
 // ==================== DROPDOWN FUNCTIONS ====================
 function populateDropdown(dropdownId, items, handler) {
@@ -501,8 +492,9 @@ function saveCurrentAyah() {
 
 function renderSavedAyahs() {
   const savedContainer = document.querySelector('.saved-container');
-  let savedDropdown = savedContainer.querySelector('.saved-dropdown');
+  let savedDropdown = savedContainer ? savedContainer.querySelector('.saved-dropdown') : null;
   if (!savedDropdown) {
+    if (!savedContainer) return;
     savedDropdown = document.createElement('div');
     savedDropdown.className = 'saved-dropdown';
     savedDropdown.style.cssText = 'display:none;position:absolute;bottom:50px;left:0;background:white;border:1px solid #ccc;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.1);padding:10px;z-index:1000;max-height:300px;overflow-y:auto;min-width:220px;';
@@ -560,7 +552,9 @@ async function loadRandomQuote() {
 
 function updateTime() {
   const now = new Date();
-  elements.timeDisplay.textContent = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  if (elements.timeDisplay) {
+    elements.timeDisplay.textContent = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
 }
 
 // ==================== MODAL FUNCTIONS ====================
@@ -672,7 +666,6 @@ function extractBestTafsirText(payload) {
   }
 
   const pickLongest = (items) => items.sort((a, b) => b.length - a.length)[0] || '';
-  // Bengali-only preference for drawer output.
   return pickLongest(ibnKathirBn) || pickLongest(preferredBn) || pickLongest(fallbackBn) || '';
 }
 
@@ -756,9 +749,13 @@ function updateAudioModeDisplay() {
     const bengaliName = bengaliSurahNames[currentVerse.chapter] || `সূরা ${currentVerse.chapter}`;
     elements.audioSurahBengali.textContent = bengaliName;
   }
-  elements.currentAyahNumber.textContent = `আয়াত ${currentVerse.verse}`;
+  if (elements.currentAyahNumber) {
+    elements.currentAyahNumber.textContent = `আয়াত ${currentVerse.verse}`;
+  }
   const reciterName = bengaliReciterNames[currentVerse.audioEdition] || currentVerse.audioEdition;
-  elements.audioReciterName.textContent = reciterName;
+  if (elements.audioReciterName) {
+    elements.audioReciterName.textContent = reciterName;
+  }
 }
 
 function syncAudioUI() {
@@ -783,7 +780,8 @@ function updateAudioModeProgress() {
   const audio = elements.audioPlayer;
   const duration = audio.duration || 0;
   const progress = duration ? audio.currentTime / duration : 0;
-  // Circle progress
+
+  // Circle progress (if exists)
   const circle = document.querySelector('.progress-ring__circle');
   const radius = 140;
   const circumference = 2 * Math.PI * radius;
@@ -791,13 +789,17 @@ function updateAudioModeProgress() {
     circle.style.strokeDasharray = circumference;
     circle.style.strokeDashoffset = circumference - progress * circumference;
   }
-  // Slider and times
+
+  // Linear progress (slider and fill bar)
   const percent = progress * 100;
   if (elements.audioProgress) elements.audioProgress.value = percent;
+
   const progressFill = document.querySelector('.progress-fill');
   if (progressFill) progressFill.style.width = `${percent}%`;
-  elements.currentTime.textContent = formatTimeBangla(audio.currentTime);
-  elements.totalTime.textContent = formatTimeBangla(duration);
+
+  // Time displays
+  if (elements.currentTime) elements.currentTime.textContent = formatTimeBangla(audio.currentTime);
+  if (elements.totalTime) elements.totalTime.textContent = formatTimeBangla(duration);
   if (elements.audioModeTime) {
     elements.audioModeTime.textContent = `${formatTimeBangla(audio.currentTime)} / ${formatTimeBangla(duration)}`;
   }
@@ -805,8 +807,8 @@ function updateAudioModeProgress() {
 
 function syncAudioModeState() {
   if (!isAudioMode) return;
-  elements.playPauseIcon.textContent = elements.audioPlayer.paused ? 'play_arrow' : 'pause';
-  elements.audioVolume.value = Math.round(elements.audioPlayer.volume * 100);
+  if (elements.playPauseIcon) elements.playPauseIcon.textContent = elements.audioPlayer.paused ? 'play_arrow' : 'pause';
+  if (elements.audioVolume) elements.audioVolume.value = Math.round(elements.audioPlayer.volume * 100);
   if (elements.audioAutoPlay) {
     if (isAutoplayEnabled) elements.audioAutoPlay.classList.add('active');
     else elements.audioAutoPlay.classList.remove('active');
@@ -832,18 +834,13 @@ function handleAudioEnded() {
       }
     }, 500);
   } else if (isAutoplayEnabled) {
-
     setTimeout(async () => {
-
-      // ✅ Shuffle takes priority
       if (shuffleMode === 'shuffle') {
         await loadRandomVerse();
       } else {
         await nextVerse();
       }
-
       elements.audioPlayer.play().catch(() => { });
-
     }, 500);
   }
 }
@@ -860,10 +857,10 @@ function formatTimeBangla(seconds) {
 function togglePlayPause() {
   if (elements.audioPlayer.paused) {
     elements.audioPlayer.play().catch(() => { });
-    elements.playPauseIcon.textContent = 'pause';
+    if (elements.playPauseIcon) elements.playPauseIcon.textContent = 'pause';
   } else {
     elements.audioPlayer.pause();
-    elements.playPauseIcon.textContent = 'play_arrow';
+    if (elements.playPauseIcon) elements.playPauseIcon.textContent = 'play_arrow';
   }
 }
 
@@ -887,7 +884,7 @@ function setSleepTimer(minutes) {
   if (minutes > 0) {
     sleepTimer = setTimeout(() => {
       elements.audioPlayer.pause();
-      if (isAudioMode) elements.playPauseIcon.textContent = 'play_arrow';
+      if (isAudioMode && elements.playPauseIcon) elements.playPauseIcon.textContent = 'play_arrow';
       showNotification('ঘুমের টাইমার সম্পন্ন হয়েছে');
     }, minutes * 60000);
     showNotification(`${minutes} মিনিটের ঘুমের টাইমার সেট করা হয়েছে`);
@@ -898,28 +895,29 @@ function setSleepTimer(minutes) {
 
 function toggleRepeatMode() {
   const btn = elements.audioRepeat;
+  if (!btn) return;
   const icon = btn.querySelector('.material-icons');
   if (repeatMode === 'none') {
     repeatMode = 'repeat-one';
-    icon.textContent = 'repeat_one';
+    if (icon) icon.textContent = 'repeat_one';
     btn.querySelector('.control-label').textContent = 'একক পুনরাবৃত্তি';
     showNotification('একক পুনরাবৃত্তি চালু');
   } else if (repeatMode === 'repeat-one') {
     repeatMode = 'repeat-all';
-    icon.textContent = 'repeat';
+    if (icon) icon.textContent = 'repeat';
     btn.querySelector('.control-label').textContent = 'সকল পুনরাবৃত্তি';
     showNotification('সকল পুনরাবৃত্তি চালু');
   } else {
     repeatMode = 'none';
-    icon.textContent = 'repeat';
+    if (icon) icon.textContent = 'repeat';
     btn.querySelector('.control-label').textContent = 'পুনরাবৃত্তি';
     showNotification('পুনরাবৃত্তি বন্ধ');
   }
 }
 
-
 function toggleShuffleMode() {
   const btn = elements.audioShuffle;
+  if (!btn) return;
   const icon = btn.querySelector('.material-icons');
 
   if (shuffleMode === 'none') {
@@ -927,10 +925,7 @@ function toggleShuffleMode() {
     btn.classList.add('active');
     localStorage.setItem('shuffleMode', 'shuffle');
     showNotification('শাফল চালু');
-
-    // 🔥 Immediately jump to random verse
     loadRandomVerse();
-
   } else {
     shuffleMode = 'none';
     btn.classList.remove('active');
@@ -944,7 +939,7 @@ function initShuffleMode() {
   const saved = localStorage.getItem('shuffleMode');
   if (saved) {
     shuffleMode = saved;
-    if (shuffleMode === 'shuffle') {
+    if (shuffleMode === 'shuffle' && elements.audioShuffle) {
       elements.audioShuffle.classList.add('active');
     }
   }
@@ -954,12 +949,14 @@ function toggleAutoPlay() {
   isAutoplayEnabled = !isAutoplayEnabled;
   localStorage.setItem('autoplay', isAutoplayEnabled);
   const btn = elements.audioAutoPlay;
-  if (isAutoplayEnabled) {
-    btn.classList.add('active');
-    showNotification('স্বয়ংক্রিয় প্লে চালু');
-  } else {
-    btn.classList.remove('active');
-    showNotification('স্বয়ংক্রিয় প্লে বন্ধ');
+  if (btn) {
+    if (isAutoplayEnabled) {
+      btn.classList.add('active');
+      showNotification('স্বয়ংক্রিয় প্লে চালু');
+    } else {
+      btn.classList.remove('active');
+      showNotification('স্বয়ংক্রিয় প্লে বন্ধ');
+    }
   }
   // Sync main toggle if exists
   if (elements.autoplayToggle) elements.autoplayToggle.checked = isAutoplayEnabled;
@@ -968,25 +965,38 @@ function toggleAutoPlay() {
 
 // ==================== EVENT LISTENERS SETUP ====================
 function setupEventListeners() {
-  // Main navigation
-  elements.prevVerse.addEventListener('click', prevVerse);
-  elements.nextVerse.addEventListener('click', nextVerse);
-  document.querySelector('.verse-content').addEventListener('dblclick', loadRandomVerse);
-
-  // Autoplay toggle (main)
-  elements.autoplayToggle.addEventListener('change', (e) => {
-    isAutoplayEnabled = e.target.checked;
-    localStorage.setItem('autoplay', isAutoplayEnabled);
-    if (elements.audioAutoPlay) {
-      if (isAutoplayEnabled) elements.audioAutoPlay.classList.add('active');
-      else elements.audioAutoPlay.classList.remove('active');
+  // Dynamic resizing function for Arabic text based on window size
+  window.addEventListener('resize', function() {
+    const verseContainer = document.querySelector('.verse-container');
+    const arabicText = document.querySelector('.verse-arabic');
+    if (verseContainer && arabicText) {
+      const containerWidth = verseContainer.offsetWidth;
+      arabicText.style.fontSize = (containerWidth / 2) + 'px';
     }
-    if (elements.audioAutoplayToggle) elements.audioAutoplayToggle.checked = isAutoplayEnabled;
   });
 
+  // Main navigation
+  if (elements.prevVerse) elements.prevVerse.addEventListener('click', prevVerse);
+  if (elements.nextVerse) elements.nextVerse.addEventListener('click', nextVerse);
+  const verseContent = document.querySelector('.verse-content');
+  if (verseContent) verseContent.addEventListener('dblclick', loadRandomVerse);
+
+  // Autoplay toggle (main)
+  if (elements.autoplayToggle) {
+    elements.autoplayToggle.addEventListener('change', (e) => {
+      isAutoplayEnabled = e.target.checked;
+      localStorage.setItem('autoplay', isAutoplayEnabled);
+      if (elements.audioAutoPlay) {
+        if (isAutoplayEnabled) elements.audioAutoPlay.classList.add('active');
+        else elements.audioAutoPlay.classList.remove('active');
+      }
+      if (elements.audioAutoplayToggle) elements.audioAutoplayToggle.checked = isAutoplayEnabled;
+    });
+  }
+
   // Dropdowns (main)
-  elements.audioIconBtn.addEventListener('click', () => toggleDropdown('reciterDropdown'));
-  elements.translationIconBtn.addEventListener('click', () => toggleDropdown('translationDropdown'));
+  if (elements.audioIconBtn) elements.audioIconBtn.addEventListener('click', () => toggleDropdown('reciterDropdown'));
+  if (elements.translationIconBtn) elements.translationIconBtn.addEventListener('click', () => toggleDropdown('translationDropdown'));
 
   // Audio ended for main mode (non-audio-mode)
   elements.audioPlayer.addEventListener('ended', () => {
@@ -994,20 +1004,24 @@ function setupEventListeners() {
   });
 
   // Surah/Ayah modal
-  elements.verseInfo.addEventListener('click', async () => {
-    elements.chapterSelect.value = currentVerse.chapter;
-    await updateVerseSelect(currentVerse.chapter);
-    elements.verseSelect.value = currentVerse.verse;
-    elements.ayahModal.style.display = 'flex';
-  });
+  if (elements.verseInfo) {
+    elements.verseInfo.addEventListener('click', async () => {
+      elements.chapterSelect.value = currentVerse.chapter;
+      await updateVerseSelect(currentVerse.chapter);
+      elements.verseSelect.value = currentVerse.verse;
+      elements.ayahModal.style.display = 'flex';
+    });
+  }
   if (elements.audioSurahTrigger) {
     elements.audioSurahTrigger.addEventListener('click', async () => {
       if (elements.audioChapterSelect) {
         elements.audioChapterSelect.value = currentVerse.chapter;
         await updateVerseSelectFor(elements.audioVerseSelect, currentVerse.chapter);
         if (elements.audioVerseSelect) elements.audioVerseSelect.value = currentVerse.verse;
-        elements.audioAyahDrawer.classList.add('open');
-        elements.audioAyahDrawer.setAttribute('aria-hidden', 'false');
+        if (elements.audioAyahDrawer) {
+          elements.audioAyahDrawer.classList.add('open');
+          elements.audioAyahDrawer.setAttribute('aria-hidden', 'false');
+        }
       } else {
         elements.chapterSelect.value = currentVerse.chapter;
         await updateVerseSelect(currentVerse.chapter);
@@ -1022,8 +1036,10 @@ function setupEventListeners() {
         elements.audioChapterSelect.value = currentVerse.chapter;
         await updateVerseSelectFor(elements.audioVerseSelect, currentVerse.chapter);
         if (elements.audioVerseSelect) elements.audioVerseSelect.value = currentVerse.verse;
-        elements.audioAyahDrawer.classList.add('open');
-        elements.audioAyahDrawer.setAttribute('aria-hidden', 'false');
+        if (elements.audioAyahDrawer) {
+          elements.audioAyahDrawer.classList.add('open');
+          elements.audioAyahDrawer.setAttribute('aria-hidden', 'false');
+        }
       } else {
         elements.chapterSelect.value = currentVerse.chapter;
         await updateVerseSelect(currentVerse.chapter);
@@ -1032,90 +1048,112 @@ function setupEventListeners() {
       }
     });
   }
-  elements.goToAyahBtn.addEventListener('click', () => {
-    const ch = parseInt(elements.chapterSelect.value);
-    const v = parseInt(elements.verseSelect.value);
-    loadVerse(ch, v);
-    elements.ayahModal.style.display = 'none';
-  });
-  elements.cancelAyahBtn.addEventListener('click', () => elements.ayahModal.style.display = 'none');
-  elements.chapterSelect.addEventListener('change', async () => {
-    await updateVerseSelect(parseInt(elements.chapterSelect.value));
-  });
+  if (elements.goToAyahBtn) {
+    elements.goToAyahBtn.addEventListener('click', () => {
+      const ch = parseInt(elements.chapterSelect.value);
+      const v = parseInt(elements.verseSelect.value);
+      loadVerse(ch, v);
+      elements.ayahModal.style.display = 'none';
+    });
+  }
+  if (elements.cancelAyahBtn) {
+    elements.cancelAyahBtn.addEventListener('click', () => elements.ayahModal.style.display = 'none');
+  }
+  if (elements.chapterSelect) {
+    elements.chapterSelect.addEventListener('change', async () => {
+      await updateVerseSelect(parseInt(elements.chapterSelect.value));
+    });
+  }
   if (elements.audioChapterSelect) {
     elements.audioChapterSelect.addEventListener('change', async () => {
       await updateVerseSelectFor(elements.audioVerseSelect, parseInt(elements.audioChapterSelect.value));
     });
   }
-  elements.audioGoToAyahBtn?.addEventListener('click', () => {
-    const ch = parseInt(elements.audioChapterSelect.value);
-    const v = parseInt(elements.audioVerseSelect.value);
-    loadVerse(ch, v);
-    elements.audioAyahDrawer.classList.remove('open');
-    elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
-  });
-  elements.audioCancelAyahBtn?.addEventListener('click', () => {
-    elements.audioAyahDrawer.classList.remove('open');
-    elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
-  });
-  elements.audioAyahClose?.addEventListener('click', () => {
-    elements.audioAyahDrawer.classList.remove('open');
-    elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
-  });
-
-  // Google Apps
-  // elements.googleAppsBtn.addEventListener('click', (e) => {
-  //   e.stopPropagation();
-  //   elements.appsDropdown.style.display = elements.appsDropdown.style.display === 'grid' ? 'none' : 'grid';
-  // });
+  if (elements.audioGoToAyahBtn) {
+    elements.audioGoToAyahBtn.addEventListener('click', () => {
+      const ch = parseInt(elements.audioChapterSelect.value);
+      const v = parseInt(elements.audioVerseSelect.value);
+      loadVerse(ch, v);
+      if (elements.audioAyahDrawer) {
+        elements.audioAyahDrawer.classList.remove('open');
+        elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }
+  if (elements.audioCancelAyahBtn) {
+    elements.audioCancelAyahBtn.addEventListener('click', () => {
+      if (elements.audioAyahDrawer) {
+        elements.audioAyahDrawer.classList.remove('open');
+        elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }
+  if (elements.audioAyahClose) {
+    elements.audioAyahClose.addEventListener('click', () => {
+      if (elements.audioAyahDrawer) {
+        elements.audioAyahDrawer.classList.remove('open');
+        elements.audioAyahDrawer.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }
 
   // Bookmarks
-  elements.bookmarkBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    elements.bookmarkDropdown.style.display = elements.bookmarkDropdown.style.display === 'block' ? 'none' : 'block';
-    if (elements.bookmarkDropdown.style.display === 'block') renderBookmarks();
-  });
-  elements.addBookmarkBtn.addEventListener('click', () => {
-    const title = elements.bookmarkTitle.value.trim();
-    const url = elements.bookmarkURL.value.trim();
-    if (title && url && url.startsWith('http')) {
-      bookmarks.push({ title, url });
-      localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-      elements.bookmarkTitle.value = '';
-      elements.bookmarkURL.value = 'https://';
-      renderBookmarks();
-      showNotification('Bookmark added!');
-    } else {
-      showNotification('Please enter valid title and URL', 'error');
-    }
-  });
+  if (elements.bookmarkBtn) {
+    elements.bookmarkBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (elements.bookmarkDropdown) {
+        elements.bookmarkDropdown.style.display = elements.bookmarkDropdown.style.display === 'block' ? 'none' : 'block';
+        if (elements.bookmarkDropdown.style.display === 'block') renderBookmarks();
+      }
+    });
+  }
+  if (elements.addBookmarkBtn) {
+    elements.addBookmarkBtn.addEventListener('click', () => {
+      const title = elements.bookmarkTitle.value.trim();
+      const url = elements.bookmarkURL.value.trim();
+      if (title && url && url.startsWith('http')) {
+        bookmarks.push({ title, url });
+        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+        elements.bookmarkTitle.value = '';
+        elements.bookmarkURL.value = 'https://';
+        renderBookmarks();
+        showNotification('Bookmark added!');
+      } else {
+        showNotification('Please enter valid title and URL', 'error');
+      }
+    });
+  }
 
   // Saved ayahs
-  elements.savedBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const savedDropdown = document.querySelector('.saved-dropdown');
-    if (savedDropdown) {
-      savedDropdown.style.display = savedDropdown.style.display === 'block' ? 'none' : 'block';
-      if (savedDropdown.style.display === 'block') renderSavedAyahs();
-    }
-  });
-  elements.favouriteBtn.addEventListener('click', saveCurrentAyah);
+  if (elements.savedBtn) {
+    elements.savedBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const savedDropdown = document.querySelector('.saved-dropdown');
+      if (savedDropdown) {
+        savedDropdown.style.display = savedDropdown.style.display === 'block' ? 'none' : 'block';
+        if (savedDropdown.style.display === 'block') renderSavedAyahs();
+      }
+    });
+  }
+  if (elements.favouriteBtn) {
+    elements.favouriteBtn.addEventListener('click', saveCurrentAyah);
+  }
 
   // Audio mode toggle
-  elements.audioModeBtn.addEventListener('click', enterAudioMode);
-  elements.exitAudioMode.addEventListener('click', exitAudioMode);
+  if (elements.audioModeBtn) elements.audioModeBtn.addEventListener('click', enterAudioMode);
+  if (elements.exitAudioMode) elements.exitAudioMode.addEventListener('click', exitAudioMode);
 
   // Audio mode controls
-  elements.audioPlayPause.addEventListener('click', togglePlayPause);
-  elements.audioPrev.addEventListener('click', prevVerse);
-  elements.audioNext.addEventListener('click', nextVerse);
-  elements.audioProgress.addEventListener('input', (e) => seekAudio(e.target.value));
-  elements.audioVolume.addEventListener('input', (e) => setAudioVolume(e.target.value));
-  elements.audioRepeat.addEventListener('click', toggleRepeatMode);
-  elements.audioShuffle.addEventListener('click', toggleShuffleMode);
-  elements.audioAutoPlay.addEventListener('click', toggleAutoPlay);
-  elements.audioSpeed.addEventListener('click', () => elements.speedModal.style.display = 'block');
-  elements.audioSleep.addEventListener('click', () => elements.sleepModal.style.display = 'block');
+  if (elements.audioPlayPause) elements.audioPlayPause.addEventListener('click', togglePlayPause);
+  if (elements.audioPrev) elements.audioPrev.addEventListener('click', prevVerse);
+  if (elements.audioNext) elements.audioNext.addEventListener('click', nextVerse);
+  if (elements.audioProgress) elements.audioProgress.addEventListener('input', (e) => seekAudio(e.target.value));
+  if (elements.audioVolume) elements.audioVolume.addEventListener('input', (e) => setAudioVolume(e.target.value));
+  if (elements.audioRepeat) elements.audioRepeat.addEventListener('click', toggleRepeatMode);
+  if (elements.audioShuffle) elements.audioShuffle.addEventListener('click', toggleShuffleMode);
+  if (elements.audioAutoPlay) elements.audioAutoPlay.addEventListener('click', toggleAutoPlay);
+  if (elements.audioSpeed) elements.audioSpeed.addEventListener('click', () => { if (elements.speedModal) elements.speedModal.style.display = 'block'; });
+  if (elements.audioSleep) elements.audioSleep.addEventListener('click', () => { if (elements.sleepModal) elements.sleepModal.style.display = 'block'; });
 
   // Audio mode dropdowns (reciter & translation)
   if (elements.audioReciterBtn) {
@@ -1132,7 +1170,7 @@ function setupEventListeners() {
       changeAudioSpeed(speed);
       document.querySelectorAll('.speed-option').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      elements.speedModal.style.display = 'none';
+      if (elements.speedModal) elements.speedModal.style.display = 'none';
     });
   });
 
@@ -1141,35 +1179,36 @@ function setupEventListeners() {
     btn.addEventListener('click', function () {
       const minutes = parseInt(this.dataset.minutes);
       setSleepTimer(minutes);
-      elements.sleepModal.style.display = 'none';
+      if (elements.sleepModal) elements.sleepModal.style.display = 'none';
     });
   });
 
   // Close modals on outside click
   document.addEventListener('click', (e) => {
-    if (elements.speedModal.style.display === 'block' && !e.target.closest('.speed-modal')) {
+    if (elements.speedModal && elements.speedModal.style.display === 'block' && !e.target.closest('.speed-modal')) {
       elements.speedModal.style.display = 'none';
     }
-    if (elements.sleepModal.style.display === 'block' && !e.target.closest('.sleep-modal')) {
+    if (elements.sleepModal && elements.sleepModal.style.display === 'block' && !e.target.closest('.sleep-modal')) {
       elements.sleepModal.style.display = 'none';
     }
     // Close dropdowns
     if (!e.target.closest('.custom-dropdown')) {
       document.querySelectorAll('.dropdown-menu').forEach(menu => menu.style.display = 'none');
     }
-    if (!elements.bookmarkBtn.contains(e.target) && !elements.bookmarkDropdown.contains(e.target)) {
+    if (elements.bookmarkBtn && elements.bookmarkDropdown && !elements.bookmarkBtn.contains(e.target) && !elements.bookmarkDropdown.contains(e.target)) {
       elements.bookmarkDropdown.style.display = 'none';
     }
-    if (!elements.googleAppsBtn.contains(e.target) && !elements.appsDropdown.contains(e.target)) {
+    if (elements.googleAppsBtn && elements.appsDropdown && !elements.googleAppsBtn.contains(e.target) && !elements.appsDropdown.contains(e.target)) {
       elements.appsDropdown.style.display = 'none';
     }
     const savedDropdown = document.querySelector('.saved-dropdown');
-    if (savedDropdown && !elements.savedBtn.contains(e.target) && !savedDropdown.contains(e.target)) {
+    if (savedDropdown && elements.savedBtn && !elements.savedBtn.contains(e.target) && !savedDropdown.contains(e.target)) {
       savedDropdown.style.display = 'none';
     }
     if (elements.audioSideDrawer) {
       const clickedDrawer = e.target.closest('#audioSideDrawer');
       const clickedTafseer = e.target.closest('#showTafseer');
+      const clickedTafseerFooter = e.target.closest('#showTafseerFooter');
       const clickedTranslation = e.target.closest('#showTranslation');
       if (!clickedDrawer && !clickedTafseer && !clickedTranslation) {
         elements.audioSideDrawer.classList.remove('open');
@@ -1188,30 +1227,34 @@ function setupEventListeners() {
 
   // Play/pause icon sync
   elements.audioPlayer.addEventListener('play', () => {
-    if (isAudioMode) elements.playPauseIcon.textContent = 'pause';
+    if (isAudioMode && elements.playPauseIcon) elements.playPauseIcon.textContent = 'pause';
   });
   elements.audioPlayer.addEventListener('pause', () => {
-    if (isAudioMode) elements.playPauseIcon.textContent = 'play_arrow';
+    if (isAudioMode && elements.playPauseIcon) elements.playPauseIcon.textContent = 'play_arrow';
   });
 
   // Additional controls in audio mode footer
-  document.getElementById('bookmarkAudio')?.addEventListener('click', saveCurrentAyah);
-  document.getElementById('shareAudio')?.addEventListener('click', () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Quran Tab',
-        text: `${elements.verseArabic.textContent} - ${elements.verseTranslation.textContent}`,
-        url: window.location.href
-      }).catch(() => { });
-    } else {
-      showNotification('শেয়ার করা সমর্থিত নয়', 'error');
-    }
-  });
+  const bookmarkAudio = document.getElementById('bookmarkAudio');
+  if (bookmarkAudio) bookmarkAudio.addEventListener('click', saveCurrentAyah);
+  const shareAudio = document.getElementById('shareAudio');
+  if (shareAudio) {
+    shareAudio.addEventListener('click', () => {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Quran Tab',
+          text: `${elements.verseArabic.textContent} - ${elements.verseTranslation.textContent}`,
+          url: window.location.href
+        }).catch(() => { });
+      } else {
+        showNotification('শেয়ার করা সমর্থিত নয়', 'error');
+      }
+    });
+  }
 
   const openAudioDrawer = (title, bodyHtml) => {
     if (!elements.audioSideDrawer) return;
-    elements.audioDrawerTitle.textContent = title;
-    elements.audioDrawerBody.innerHTML = bodyHtml;
+    if (elements.audioDrawerTitle) elements.audioDrawerTitle.textContent = title;
+    if (elements.audioDrawerBody) elements.audioDrawerBody.innerHTML = bodyHtml;
     elements.audioSideDrawer.classList.add('open');
     elements.audioSideDrawer.setAttribute('aria-hidden', 'false');
   };
@@ -1268,22 +1311,20 @@ function setupEventListeners() {
     }
   };
 
-
-  document.getElementById('showTafseer')?.addEventListener('click', () => {
-    openTafsirDrawer();
-  });
-
-  document.getElementById('showTafseerFooter')?.addEventListener('click', () => {
-    openTafsirDrawer();
-  });
-
-  document.getElementById('showTranslation')?.addEventListener('click', () => {
-    openTranslationDrawer();
-  });
-  elements.audioDrawerClose?.addEventListener('click', () => {
-    elements.audioSideDrawer?.classList.remove('open');
-    elements.audioSideDrawer?.setAttribute('aria-hidden', 'true');
-  });
+  const showTafseer = document.getElementById('showTafseer');
+  if (showTafseer) showTafseer.addEventListener('click', openTafsirDrawer);
+  const showTafseerFooter = document.getElementById('showTafseerFooter');
+  if (showTafseerFooter) showTafseerFooter.addEventListener('click', openTafsirDrawer);
+  const showTranslation = document.getElementById('showTranslation');
+  if (showTranslation) showTranslation.addEventListener('click', openTranslationDrawer);
+  if (elements.audioDrawerClose) {
+    elements.audioDrawerClose.addEventListener('click', () => {
+      if (elements.audioSideDrawer) {
+        elements.audioSideDrawer.classList.remove('open');
+        elements.audioSideDrawer.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }
 
   // Audio mode autoplay toggle
   if (elements.audioAutoplayToggle) {
@@ -1298,7 +1339,6 @@ function setupEventListeners() {
       if (elements.autoplayToggle) elements.autoplayToggle.checked = isAutoplayEnabled;
     });
   }
-
 }
 
 // ==================== INITIALIZATION ====================
@@ -1308,12 +1348,15 @@ async function initializeApp() {
 
   // Load autoplay preference
   isAutoplayEnabled = localStorage.getItem('autoplay') === 'true';
-  elements.autoplayToggle.checked = isAutoplayEnabled;
+  if (elements.autoplayToggle) elements.autoplayToggle.checked = isAutoplayEnabled;
   if (elements.audioAutoPlay) {
     if (isAutoplayEnabled) elements.audioAutoPlay.classList.add('active');
     else elements.audioAutoPlay.classList.remove('active');
   }
   if (elements.audioAutoplayToggle) elements.audioAutoplayToggle.checked = isAutoplayEnabled;
+
+  // Load shuffle mode
+  initShuffleMode();
 
   // Populate main dropdowns
   populateDropdown('reciterDropdown', [
