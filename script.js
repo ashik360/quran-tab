@@ -163,6 +163,197 @@ const bengaliReciterNames = {
   'ru.kuliev-audio': 'এলমির কুলিয়েভ (রাশিয়ান)'
 };
 
+// ==================== RAMADAN MODE DATA ====================
+
+let ramadanInterval = null;
+let currentPrayerTimes = []; // will hold fetched prayer times
+
+function getNextOccurrence(timeString) {
+  const [hours, minutes] = timeString.split(":").map(Number);
+
+  const now = new Date();
+  const target = new Date(now);
+
+  target.setSeconds(0);
+  target.setMilliseconds(0);
+  target.setHours(hours);
+  target.setMinutes(minutes);
+
+  // If already passed → move to tomorrow
+  if (target <= now) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  return target;
+}
+
+function getRemainingTime(targetTime) {
+  const now = new Date();
+  let diff = targetTime - now;
+  if (diff < 0) diff += 24 * 60 * 60 * 1000; // if passed, next day
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  return { hours, minutes, seconds };
+}
+
+function formatRemainingBangla(hours, minutes, seconds) {
+  const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  const pad = (num) => num.toString().padStart(2, '0').split('').map(d => bengaliDigits[parseInt(d)]).join('');
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+// Calculate remaining time in HH:MM:SS format
+function getRemainingTime(targetTime) {
+  const now = new Date();
+  let diff = targetTime - now;
+  if (diff < 0) diff += 24 * 60 * 60 * 1000; // if passed, next day
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  return { hours, minutes, seconds, diff };
+}
+
+// Format as HH:MM:SS with Bangla digits
+function formatRemainingBangla(hours, minutes, seconds) {
+  const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  const pad = (num) => num.toString().padStart(2, '0').split('').map(d => bengaliDigits[parseInt(d)]).join('');
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+function populatePrayerTable(prayerTimes) {
+  if (!elements.prayerTimesBody) return;
+  elements.prayerTimesBody.innerHTML = '';
+  prayerTimes.forEach((prayer, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${prayer.name}</td>
+      <td>${prayer.time}</td>
+      <td class="countdown-cell" id="countdown-${index}">--:--:--</td>
+    `;
+    elements.prayerTimesBody.appendChild(row);
+  });
+}
+
+function getTodayTime(timeString) {
+  const [h, m] = timeString.split(":").map(Number);
+
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+
+  return d;
+}
+
+function getNextOccurrence(timeString) {
+  const target = getTodayTime(timeString);
+  const now = new Date();
+
+  if (target <= now) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  return target;
+}
+
+function updateRamadanCountdowns() {
+  if (!window.prayerTimesData) return;
+
+  const now = new Date();
+
+  const fajrStr = window.prayerTimesData[0].time;
+  const maghribStr = window.prayerTimesData[3].time;
+
+  const fajrToday = getTodayTime(fajrStr);
+  const maghribToday = getTodayTime(maghribStr);
+
+  const fajrNext = getNextOccurrence(fajrStr);
+  const maghribNext = getNextOccurrence(maghribStr);
+
+  // ====================================
+  // IFTAR LOGIC
+  // ====================================
+
+  if (now < maghribToday) {
+    // Before Maghrib → show countdown
+    elements.iftarLabel.textContent = "ইফতারের সময় বাকি";
+
+    const remaining = getRemainingTime(maghribToday);
+
+    elements.iftarCountdown.textContent =
+      formatRemainingBangla(
+        remaining.hours,
+        remaining.minutes,
+        remaining.seconds
+      );
+
+  } else {
+    // After Maghrib → show fixed time (+1 minute)
+    elements.iftarLabel.textContent = "আগামীকাল ইফতার";
+
+    const display = new Date(maghribToday);
+    display.setMinutes(display.getMinutes() + 1);
+
+    elements.iftarCountdown.textContent =
+      display.toLocaleTimeString("bn-BD", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+  }
+
+  // ====================================
+  // SEHRI LOGIC
+  // ====================================
+
+  if (now < fajrToday) {
+    // Before Fajr → countdown
+    elements.sehriLabel.textContent = "সেহরির সময় বাকি";
+
+    const remaining = getRemainingTime(fajrToday);
+
+    elements.sehriCountdown.textContent =
+      formatRemainingBangla(
+        remaining.hours,
+        remaining.minutes,
+        remaining.seconds
+      );
+
+  } else {
+    // After Fajr → show fixed time (-1 minute of next fajr)
+    elements.sehriLabel.textContent = "পরবর্তী সেহরীর শেষ সময়";
+
+    const nextFajrDisplay = new Date(fajrNext);
+    nextFajrDisplay.setMinutes(nextFajrDisplay.getMinutes() - 1);
+
+    elements.sehriCountdown.textContent =
+      nextFajrDisplay.toLocaleTimeString("bn-BD", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+  }
+
+  // ====================================
+  // PRAYER TABLE COUNTDOWN
+  // ====================================
+
+  window.prayerTimesData.forEach((prayer, index) => {
+    const target = getNextOccurrence(prayer.time);
+    const remaining = getRemainingTime(target);
+
+    const cell = document.getElementById(`countdown-${index}`);
+
+    if (cell) {
+      cell.textContent =
+        formatRemainingBangla(
+          remaining.hours,
+          remaining.minutes,
+          remaining.seconds
+        );
+    }
+  });
+}
+
 // DOM Elements
 const elements = {
   timeDisplay: document.getElementById('timeDisplay'),
@@ -231,7 +422,17 @@ const elements = {
   audioVerseSelect: document.getElementById('audioVerseSelect'),
   audioGoToAyahBtn: document.getElementById('audioGoToAyahBtn'),
   audioCancelAyahBtn: document.getElementById('audioCancelAyahBtn'),
-  audioAutoplayToggle: document.getElementById('audioAutoplayToggle')
+  audioAutoplayToggle: document.getElementById('audioAutoplayToggle'),
+  // Ramadan
+  iftarLabel: document.getElementById('iftarLabel'),
+  sehriLabel: document.getElementById('sehriLabel'),
+  ramadanModeBtn: document.getElementById('ramadanModeBtn'),
+  ramadanModeScreen: document.getElementById('ramadanModeScreen'),
+  exitRamadanMode: document.getElementById('exitRamadanMode'),
+  ramadanDate: document.getElementById('ramadanDate'),
+  iftarCountdown: document.getElementById('iftarCountdown'),
+  sehriCountdown: document.getElementById('sehriCountdown'),
+  prayerTimesBody: document.getElementById('prayerTimesBody'),
 };
 
 // ==================== UTILITY FUNCTIONS ====================
@@ -376,6 +577,58 @@ async function loadAudioByAyah(chapter, verse) {
   }
 }
 
+// ==================== PRAYER TIMES API ====================
+async function fetchPrayerTimes(city = "Dhaka", country = "Bangladesh") {
+  try {
+    const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=1`);
+    const data = await response.json();
+    if (data.code === 200) {
+      const timings = data.data.timings;
+      return [
+        { name: 'ফজর', time: timings.Fajr },
+        { name: 'যোহর', time: timings.Dhuhr },
+        { name: 'আসর', time: timings.Asr },
+        { name: 'মাগরিব', time: timings.Maghrib },
+        { name: 'ইশা', time: timings.Isha }
+      ];
+    }
+  } catch (error) {
+    console.error("Failed to fetch prayer times", error);
+    // Fallback times
+    return [
+      { name: 'ফজর', time: '05:00' },
+      { name: 'যোহর', time: '12:15' },
+      { name: 'আসর', time: '15:45' },
+      { name: 'মাগরিব', time: '18:15' },
+      { name: 'ইশা', time: '19:45' }
+    ];
+  }
+}
+
+/* ===============================
+   AZAN AUDIO SETUP
+================================= */
+
+const azanAudio = new Audio(
+  "https://download.tvquran.com/download/TvQuran.com__Athan/TvQuran.com__08.athan.mp3"
+);
+
+azanAudio.preload = "auto";
+azanAudio.volume = 1.0;
+
+
+async function fetchHijriDate() {
+  try {
+    const res = await fetch('https://api.aladhan.com/v1/gToH?date=' + new Date().toISOString().split('T')[0]);
+    const data = await res.json();
+    if (data.code === 200) {
+      const hijri = data.data.hijri;
+      return `${hijri.day} ${hijri.month.en} ${hijri.year}`;
+    }
+  } catch { }
+  return 'রমজান ১৪৪৬ হিজরি'; // fallback
+}
+
 // ==================== NAVIGATION ====================
 async function prevVerse() {
   if (currentVerse.verse > 1) {
@@ -417,9 +670,55 @@ async function loadRandomVerse() {
   const verse = Math.floor(Math.random() * count) + 1;
   await loadVerse(chapter, verse, true, true);
   if (isAudioMode) {
-    elements.audioPlayer.play().catch(() => {});
+    elements.audioPlayer.play().catch(() => { });
   }
 }
+
+let prayerTimesCache = [];
+let lastAzanPlayed = {};
+
+async function initPrayerTimes() {
+  prayerTimesCache = await fetchPrayerTimes("Dhaka", "Bangladesh");
+}
+
+function checkPrayerTimeAndPlayAzan() {
+  const now = new Date();
+  const currentHours = now.getHours().toString().padStart(2, "0");
+  const currentMinutes = now.getMinutes().toString().padStart(2, "0");
+
+  const currentTime = `${currentHours}:${currentMinutes}`;
+  const today = now.toDateString();
+
+  prayerTimesCache.forEach(prayer => {
+
+    // ✅ CLEAN TIME HERE ONLY (without modifying original data)
+    const cleanTime = prayer.time.split(" ")[0];
+
+    if (cleanTime === currentTime) {
+      if (lastAzanPlayed[prayer.name] !== today + currentTime) {
+        playAzan(prayer.name);
+        lastAzanPlayed[prayer.name] = today + currentTime;
+      }
+    }
+  });
+}
+
+async function startAzanSystem() {
+  await initPrayerTimes();
+
+  checkPrayerTimeAndPlayAzan(); // check immediately
+
+  setInterval(checkPrayerTimeAndPlayAzan, 60000);
+  // 🔁 Refresh prayer times every 24 hours
+  setInterval(async () => {
+    prayerTimesCache = await fetchPrayerTimes("Dhaka", "Bangladesh");
+  }, 86400000);
+}
+
+// Start system AFTER page loads
+document.addEventListener("DOMContentLoaded", startAzanSystem);
+
+startAzanSystem();
 
 // ==================== DROPDOWN FUNCTIONS ====================
 function populateDropdown(dropdownId, items, handler) {
@@ -720,6 +1019,61 @@ async function updateVerseSelectFor(selectEl, chapter) {
   }
 }
 
+/* ===============================
+   CHECK PRAYER TIME & PLAY AZAN
+================================= */
+
+function checkPrayerTimeAndPlayAzan(prayerTimes) {
+  const now = new Date();
+
+  const currentHours = now.getHours().toString().padStart(2, "0");
+  const currentMinutes = now.getMinutes().toString().padStart(2, "0");
+
+  const currentTime = `${currentHours}:${currentMinutes}`;
+
+  Object.entries(prayerTimes).forEach(([prayerName, time]) => {
+    if (time === currentTime && lastAzanPlayed !== prayerName + currentTime) {
+      playAzan(prayerName);
+      lastAzanPlayed = prayerName + currentTime;
+    }
+  });
+}
+
+function playAzan(prayerName) {
+  console.log("Playing Azan for:", prayerName);
+
+  // Optional: Show notification alert
+  showAzanNotification(prayerName);
+
+  azanAudio.currentTime = 0;
+
+  azanAudio.play().catch((err) => {
+    console.warn("Autoplay blocked. User interaction required.");
+  });
+}
+
+function showAzanNotification(prayerName) {
+  const notification = document.createElement("div");
+  notification.innerHTML = `🕌 ${prayerName} নামাজের সময় হয়েছে: `;
+  
+  notification.style.position = "fixed";
+  notification.style.top = "20px";
+  notification.style.right = "20px";
+  notification.style.background = "#111";
+  notification.style.color = "#fff";
+  notification.style.padding = "15px 20px";
+  notification.style.borderRadius = "8px";
+  notification.style.zIndex = "999999";
+  notification.style.boxShadow = "0 5px 15px rgba(0,0,0,0.3)";
+  notification.style.fontSize = "16px";
+
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.remove();
+  }, 10000);
+}
+
 // ==================== AUDIO MODE FUNCTIONS ====================
 function enterAudioMode() {
   isAudioMode = true;
@@ -757,6 +1111,36 @@ function updateAudioModeDisplay() {
     elements.audioReciterName.textContent = reciterName;
   }
 }
+
+async function enterRamadanMode() {
+  elements.ramadanModeScreen.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  elements.ramadanDate.textContent = await fetchHijriDate();
+
+  // Fetch prayer times
+  window.prayerTimesData = await fetchPrayerTimes();
+
+  populatePrayerTable(window.prayerTimesData);
+  updateRamadanCountdowns(); // initial update
+  if (ramadanInterval) clearInterval(ramadanInterval);
+  ramadanInterval = setInterval(updateRamadanCountdowns, 1000);
+}
+
+function exitRamadanMode() {
+  elements.ramadanModeScreen.style.display = 'none';
+  document.body.style.overflow = 'auto';
+  if (ramadanInterval) {
+    clearInterval(ramadanInterval);
+    ramadanInterval = null;
+  }
+}
+
+document.addEventListener("click", () => {
+  azanAudio.play().then(() => {
+    azanAudio.pause();
+    azanAudio.currentTime = 0;
+  }).catch(() => {});
+}, { once: true });
 
 function syncAudioUI() {
   elements.audioPlayer.removeEventListener('timeupdate', handleTimeUpdate);
@@ -966,12 +1350,12 @@ function toggleAutoPlay() {
 // ==================== EVENT LISTENERS SETUP ====================
 function setupEventListeners() {
   // Dynamic resizing function for Arabic text based on window size
-  window.addEventListener('resize', function() {
+  window.addEventListener('resize', function () {
     const verseContainer = document.querySelector('.verse-container');
     const arabicText = document.querySelector('.verse-arabic');
     if (verseContainer && arabicText) {
       const containerWidth = verseContainer.offsetWidth;
-      arabicText.style.fontSize = (containerWidth / 2) + 'px';
+      arabicText.style.fontSize = (containerWidth / 40) + 'px';
     }
   });
 
@@ -1339,6 +1723,9 @@ function setupEventListeners() {
       if (elements.autoplayToggle) elements.autoplayToggle.checked = isAutoplayEnabled;
     });
   }
+  // Ramadan Mode
+  elements.ramadanModeBtn.addEventListener('click', enterRamadanMode);
+  elements.exitRamadanMode.addEventListener('click', exitRamadanMode);
 }
 
 // ==================== INITIALIZATION ====================
@@ -1463,7 +1850,9 @@ async function initializeApp() {
   }
 
   setupEventListeners();
-
+  // Start Ramadan countdown updates
+  updateRamadanCountdowns();
+  setInterval(updateRamadanCountdowns, 1000);
   renderBookmarks();
   renderSavedAyahs();
 

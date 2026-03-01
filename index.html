@@ -24,7 +24,7 @@
 
     <main class="main-content">
       <!-- Bookmark container -->
-      <div class="bookmark-container">
+      <!-- <div class="bookmark-container">
         <button id="bookmarkBtn" class="icon-btn" title="Bookmarks">
           <span class="material-icons">bookmark_border</span>
         </button>
@@ -39,6 +39,61 @@
             </button>
           </div>
           <ul id="bookmarkList"></ul>
+        </div>
+      </div> -->
+
+      <!-- Ramadan Mode Button (replaces Bookmark) -->
+      <div class="ramadan-container">
+        <button id="ramadanModeBtn" class="icon-btn" title="Ramadan Mode">
+          <span class="material-icons">brightness_3</span> <!-- crescent moon icon -->
+        </button>
+      </div>
+
+      <!-- ========== RAMADAN MODE SCREEN ========== -->
+      <div id="ramadanModeScreen" class="ramadan-mode-screen">
+        <div class="ramadan-mode-header">
+          <button style="background: transparent;" id="exitRamadanMode" class="icon-btn">
+            <div class="ramadan-date" style="display: flex; width: 10rem; justify-content: space-between; align-items: center;"><span class="material-icons">close</span> <span class="material-icons">rotate_left</span> <!--<p style="color: transparent;">ক্লোজ</p> --></div>
+          </button>
+          <div class="ramadan-mode-title">🌙 রমজান মোড</div>
+          <div class="ramadan-date" id="ramadanDate">১ রমজান ১৪৪৬</div>
+        </div>
+
+        <div class="ramadan-mode-main">
+          <!-- Next Iftar & Sehri Cards -->
+          <div class="ramadan-cards">
+            <div class="ramadan-card iftar-card">
+              <div class="card-label" id="iftarLabel">ইফতারের সময় বাকি</div>
+              <div class="card-time" id="iftarCountdown">--:--:--</div>
+              <div class="card-prayer">মাগরিব</div>
+            </div>
+            <div class="ramadan-card sehri-card">
+              <div class="card-label" id="sehriLabel">সেহরির সময় বাকি</div>
+              <div class="card-time" id="sehriCountdown">--:--:--</div>
+              <div class="card-prayer">ফজর</div>
+            </div>
+          </div>
+
+          <!-- Prayer Times Table -->
+          <div class="prayer-table-container">
+            <table class="prayer-table">
+              <thead>
+                <tr>
+                  <th>ওয়াক্ত</th>
+                  <th>নামজের সময়</th>
+                  <th>সময় বাকি</th>
+                </tr>
+              </thead>
+              <tbody id="prayerTimesBody">
+                <!-- Rows will be filled by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Azan Feature Note (optional) -->
+          <div class="azan-note">
+            <span class="material-icons">notifications_active</span> আযানের সময় হলে স্বয়ংক্রিয়ভাবে জানানো হবে
+          </div>
         </div>
       </div>
 
@@ -165,8 +220,8 @@
       </button>
       <div class="audio-mode-title">অডিও মোড</div>
       <button class="icon-btn flex-wrap" id="showTafseer">
-          <span class="material-icons" title="তাফসীর">menu_book</span>
-        </button>
+        <span class="material-icons" title="তাফসীর">menu_book</span>
+      </button>
     </div>
 
     <div class="audio-mode-main">
