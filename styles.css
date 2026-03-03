@@ -85,7 +85,7 @@ body {
 .main-content {
   margin-top: 80px;
   margin-bottom: 40px;
-  padding: 2rem 1rem;
+  padding: 1rem 1rem;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -94,18 +94,6 @@ body {
   overflow-y: auto;
 }
 
-/* VERSE CONTAINER */
-.verse-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  max-width: 98%;
-  margin-bottom: 2rem;
-  justify-content: center;
-  position: relative;
-  min-height: 400px;
-}
 
 .nav-btn {
   background: var(--secondary);
@@ -130,57 +118,6 @@ body {
   transform: translateY(-2px);
   background: #2563eb;
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
-}
-
-.verse-content {
-  flex: 1;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  padding: 2.5rem;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  text-align: center;
-  border: 2px solid rgba(219, 234, 254, 0.8);
-  position: relative;
-  overflow: hidden;
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.verse-arabic {
-  font-size: 1.3rem;
-  line-height: 1.8;
-  direction: rtl;
-  margin-top: 1rem;
-  padding: 1.5rem;
-  color: var(--primary);
-  border-radius: 12px;
-}
-
-.verse-translation {
-  font-size: 1.3rem;
-  line-height: 1.8;
-  margin-top: 1rem;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 1.5rem;
-  border-left: 5px solid var(--secondary);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.verse-info {
-  font-style: italic;
-  color: var(--secondary);
-  margin-top: 1rem;
-  cursor: pointer;
-  text-decoration: underline;
-  transition: all 0.3s ease;
-  display: inline-block;
-  padding: 8px 16px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 20px;
 }
 
 /* CONTROLS */
@@ -294,11 +231,6 @@ body {
   z-index: 1001;
 }
 
-.bookmark-container,
-.ramadan-container {
-  top: 105px !important;
-  left: 20px !important;
-}
 
 .google-apps-container {
   top: 105px;
@@ -602,6 +534,7 @@ body {
   background: #ffffff;
   color: #1e293b;
   padding: 10px 12px;
+  margin: .5rem 0rem;
 }
 
 .modal-content select:focus {
@@ -616,6 +549,7 @@ body {
   padding: 10px 12px;
   font-weight: 600;
   cursor: pointer;
+  margin: .5rem 0rem;
 }
 
 .modal-content button:hover {
@@ -1294,14 +1228,7 @@ body {
     width: min(65%, 92vw);
   }
 
-  .verse-arabic {
-    overflow-y: auto;
-  }
-
-  .verse-container {
-    min-width: 110%;
-    overflow-y: auto;
-  }
+ 
 }
 
 @media screen and (max-width: 480px) {
@@ -1310,8 +1237,8 @@ body {
   }
 
   .surah-circle-container {
-    width: 200px;
-    height: 200px;
+    width: 200px!important;
+    height: 200px!important;
   }
 
   .calligraphy {
@@ -1339,33 +1266,11 @@ body {
     width: min(65%, 92vw);
   }
 
-  .verse-arabic {
-    overflow-y: auto;
-  }
-
-  .verse-container {
-    min-width: 110%;
-    overflow-y: auto;
-  }
-
   .nav-btn {
     height: 30px;
     width: 30px;
   }
 
-  .verse-container {
-    gap: 0rem;
-    overflow-y: auto;
-  }
-
-  .verse-content {
-    padding: 0rem 1rem;
-  }
-
-  .verse-info {
-    width: 100%;
-    overflow-y: auto;
-  }
 
   .audio-controls {
     min-width: 100%;
@@ -1388,10 +1293,25 @@ body {
     margin-bottom: .5rem;
   }
 
-  .verse-arabic {
-    margin-top: 15rem;
-  }
 }
+
+@media screen and (min-width: 0px) and (max-width: 560px) {
+  .bookmark-container,
+  .google-apps-container {
+    display: none;
+  }
+  .controls-container{
+    flex-direction: column;
+  }
+  .favourite-container .icon-btn {
+    background: #2563eb;
+}
+  .saved-container .icon-btn {
+    background: #2563eb;
+    width: 2.5rem;
+}
+}
+
 
 /* ========== DropDown Fix ========== */
 
@@ -1546,88 +1466,84 @@ body {
 }
 
 
-/* Make the verse container scrollable if the content overflows */
 .verse-container {
   display: flex;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+  overflow-y: scroll;
   align-items: center;
-  justify-content: space-between;
+  gap: 1rem;
   width: 100%;
-  height: auto;
-  max-height: 400px;
-  /* Limit the height of the verse container */
-  padding: 10px;
+  max-width: 1200px;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.main-content {
+  margin-top: 80px;
+  margin-bottom: 40px;
+  padding: 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   overflow-y: auto;
-  /* Enable vertical scrolling if content exceeds the height */
-}
-
-/* Verse content (Arabic text) style */
-.verse-arabic {
-  font-family: 'Amiri', serif;
-  /* Use a font suitable for Arabic */
-  font-size: 2em;
-  /* Adjust font size as needed */
-  line-height: 1.5em;
-  /* Adjust line height for readability */
-  white-space: pre-wrap;
-  /* Ensure text wraps if it's too long */
-  word-wrap: break-word;
-  /* Allow breaking of long words */
-  text-align: center;
-  /* Center-align the text */
-  width: 100%;
-  /* Make sure it takes full width */
-  overflow-wrap: break-word;
-  /* Break long words to fit container */
-  padding: 10px;
-  /* Add some padding */
-}
-
-/* Optional: Make the translation text smaller for better balance */
-.verse-translation {
-  font-size: 1.2em;
-  margin-top: 10px;
-  color: #555;
-  text-align: center;
-  padding: 5px;
-}
-
-
-/* Customize the width of the scrollbar */
-/* WebKit Browsers (Chrome, Safari, etc.) */
-.verse-container::-webkit-scrollbar {
-  width: 6px;
-  height: 12px;
-  /* For horizontal scrollbar */
-}
-
-/* Scrollbar thumb (the draggable part) */
-.verse-container::-webkit-scrollbar-thumb {
-  background-color: var(--secondary);
-  /* Use the primary color for the thumb */
-  border-radius: 10px;
-  border: 3px solid var(--secondary);
-  /* Border color for thumb */
-}
-
-/* Scrollbar track (the background part) */
-.verse-container::-webkit-scrollbar-track {
-  background: var(--light);
-  /* Use light color for track background */
-  border-radius: 10px;
-}
-
-/* Hover effect for the thumb */
-.verse-container::-webkit-scrollbar-thumb:hover {
-  background-color: var(--secondary);
-  /* Change to secondary color on hover */
-}
-
-/* Firefox scrollbar customization */
-.verse-container {
+  overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: #e0f2fe var(--light);
-  /* Thumb and track colors for Firefox */
+  scrollbar-color: rgba(59, 130, 246, 0.4) transparent;
 }
+
+.main-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background-color: rgba(59, 130, 246, 0.5);
+  border-radius: 10px;
+}
+
+
+.verse-content {
+  flex: 1;
+  background: linear-gradient(to bottom right, #f0f9ff, #e0f2fe);
+  padding: 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  border: 1px solid #dbeafe;
+  position: relative;
+  overflow-x: hidden;
+  max-height: 80vh;
+  width: 100%;
+}
+
+.verse-arabic {
+  font-size: 2.2rem;
+  font-family: 'Amiri', serif;
+  direction: rtl;
+  line-height: 2.5;
+  color: #1e3a8a;
+  margin-bottom: 1rem;
+}
+
+.verse-translation {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 1rem;
+  border-left: 4px solid var(--secondary);
+  border-radius: 8px;
+}
+
+.verse-info {
+  font-style: italic;
+  color: var(--secondary);
+  margin-top: 1rem;
+  display: contents;
+}
+
 
 /* ======== Ramadan Mode ========= */
 
@@ -1663,6 +1579,7 @@ body {
   font-weight: 700;
   color: #f8c794;
   text-shadow: 0 0 10px #e6b17e;
+  text-align: center;
 }
 
 .ramadan-date {
@@ -1671,6 +1588,7 @@ body {
   padding: 8px 16px;
   border-radius: 40px;
   border: 1px solid #f8c794;
+  text-align: center;
 }
 
 .ramadan-mode-main {
@@ -1786,6 +1704,7 @@ body {
 
 /* Azan note */
 .azan-note {
+  text-align: center;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1819,7 +1738,7 @@ body {
 
 .ramadan-container {
   position: fixed;
-  top: 120px;
+  top: 105px;
   left: 20px;
   z-index: 1001;
 }
@@ -1833,37 +1752,44 @@ body {
 
 @media (max-width: 600px) {
 
-  .verse-content {
-    overflow-y: auto;
-    max-height: 60vh;
-    padding: 10px;
-  }
 
-  .verse-container {
-    min-height: 0;
-  }
+
+
 
   .main-content,
   .container {
     overflow: visible;
   }
-
-  .verse-arabic {
-    min-height: 40vh;
-    max-height: 60vh;
-    line-height: 2.5;
-    word-break: break-word;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 0px;
-  }
-
-  .verse-translation{
-    margin-top: 0px;
-  }
-  .progress-container {
-    display: none;
-  }
+  
 
 }
+
+@media screen and (min-width: 0px) and (max-width: 560px) {
+  .bookmark-container,
+  .google-apps-container {
+    display: none;
+  }
+  .verse-content{
+    min-width: 125%;
+  }
+  .verse-arabic{
+    font-size: 1.6rem;
+    padding: .5rem;
+  }
+  .verse-translation{
+    font-size: 1.0rem;
+  }
+  .controls-container{
+    flex-direction: column;
+  }
+  .favourite-container .icon-btn {
+    background: #2563eb;
+}
+  .saved-container .icon-btn {
+    background: #2563eb;
+    width: 2.5rem;
+}
+}
+
+/* Audio mode fix */
+

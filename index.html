@@ -134,16 +134,19 @@
         </button>
 
         <div class="verse-content">
-          <div class="progress-container">
-            <div class="progress-bar"></div>
-          </div>
-          <div class="preload-indicator">Next verse preloaded ✓</div>
-
           <div class="verse-arabic" id="verseArabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
           <div class="verse-translation" id="verseTranslation">
             In the name of Allah, the Entirely Merciful, the Especially Merciful.
           </div>
-
+          <div id="ayahSelectModal">
+            <div class="modal-content">
+              <h3>Go to Ayah</h3>
+              <select id="chapterSelect"></select>
+              <select id="verseSelect"></select>
+              <button id="goToAyahBtn">Go</button>
+              <button id="cancelAyahBtn">Cancel</button>
+            </div>
+          </div>
           <div class="controls-container">
             <div class="selectors-container">
               <div class="custom-dropdown">
@@ -152,12 +155,14 @@
                 </button>
                 <ul class="dropdown-menu" id="reciterDropdown"></ul>
               </div>
+
               <div class="custom-dropdown">
                 <button id="translationIconBtn" class="icon-btn" title="Select Translation">
                   <span class="material-icons mi-white">translate</span>
                 </button>
                 <ul class="dropdown-menu" id="translationDropdown"></ul>
               </div>
+
               <div class="autoplay-toggle">
                 <label class="switch">
                   <input type="checkbox" id="autoplayToggle" />
@@ -166,19 +171,22 @@
                 </label>
               </div>
             </div>
+
             <div class="verse-info" id="verseInfo" style="cursor: pointer; text-decoration: underline;">
               Surah Al-Fatihah (1:1)
             </div>
+
             <div class="audio-controls">
               <audio id="audioPlayer" controls></audio>
             </div>
           </div>
 
           <!-- Modal for selecting Surah and Ayah -->
-          <div id="ayahSelectModal" style="display: none; position: fixed; z-index: 100001; left: 0; top: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+          <div id="ayahSelectModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;">
             <div class="modal-content"
-              style="background: #cbeded; padding: 20px; border-radius: 8px; max-width: 320px; width: 90%;">
+              style="background: #2563eb; padding: 20px; border-radius: 8px; max-width: 320px; width: 90%;">
               <h3>Select Ayah</h3>
               <select id="chapterSelect" style="width: 100%; margin-top: 10px;"></select>
               <select id="verseSelect" style="width: 100%; margin-top: 10px;"></select>
@@ -186,6 +194,7 @@
               <button id="cancelAyahBtn" style="margin-top: 5px; width: 100%;">Cancel</button>
             </div>
           </div>
+
         </div>
 
         <button class="nav-btn" id="nextVerse">

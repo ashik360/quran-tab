@@ -1349,15 +1349,6 @@ function toggleAutoPlay() {
 
 // ==================== EVENT LISTENERS SETUP ====================
 function setupEventListeners() {
-  // Dynamic resizing function for Arabic text based on window size
-  window.addEventListener('resize', function () {
-    const verseContainer = document.querySelector('.verse-container');
-    const arabicText = document.querySelector('.verse-arabic');
-    if (verseContainer && arabicText) {
-      const containerWidth = verseContainer.offsetWidth;
-      arabicText.style.fontSize = (containerWidth / 40) + 'px';
-    }
-  });
 
   // Main navigation
   if (elements.prevVerse) elements.prevVerse.addEventListener('click', prevVerse);
