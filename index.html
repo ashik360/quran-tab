@@ -1,219 +1,218 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <meta
+    name="description"
+    content="Quran Tab - Premium responsive Quran reading, audio mode, saved ayahs, and Ramadan mode experience."
+  />
+  <meta name="theme-color" content="#0f3d91" />
   <title>Quran Tab</title>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet" />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Icons&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-  <div class="container">
-    <header class="header">
-      <div class="app-title">
-        Quran Tab
-        <small style="font-size: xx-small;">version: 1.2.4</small>
+  <div class="app-shell">
+    <!-- Background decoration -->
+    <div class="bg-orb orb-1" aria-hidden="true"></div>
+    <div class="bg-orb orb-2" aria-hidden="true"></div>
+    <div class="bg-orb orb-3" aria-hidden="true"></div>
+
+    <!-- Header -->
+    <header class="header glass">
+      <div class="header-left">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span class="material-icons">auto_stories</span></div>
+          <div>
+            <h1 class="app-title">Quran Tab</h1>
+            <p class="app-subtitle">Your Daily Source of Inspiration</p>
+          </div>
+        </div>
       </div>
-      <div class="time-display" id="timeDisplay">00:00:00</div>
-      <div class="app-subtitle">Your Daily Source of Inspiration</div>
+
+      <div class="header-right">
+        <div class="version-badge" aria-label="Version">v2.0.0</div>
+        <div class="time-display" id="timeDisplay" aria-live="polite">00:00:00</div>
+      </div>
     </header>
 
-    <main class="main-content">
-      <!-- Bookmark container -->
-      <!-- <div class="bookmark-container">
-        <button id="bookmarkBtn" class="icon-btn" title="Bookmarks">
-          <span class="material-icons">bookmark_border</span>
-        </button>
-        <div class="bookmark-dropdown" id="bookmarkDropdown" style="display: none;">
-          <div class="bookmark-input">
-            <input type="text" required id="bookmarkTitle" placeholder="Title">
-            <input type="url" required id="bookmarkURL" value="https://" placeholder="https://example.com">
-            <button style="display: flex; flex-direction: column; align-items: center;" id="addBookmarkBtn"
-              title="Add Bookmark">
-              <span class="material-icons mi-white">add</span>
-              <span class="icon-txt">Add A New Bookmark</span>
-            </button>
-          </div>
-          <ul id="bookmarkList"></ul>
-        </div>
-      </div> -->
+    <!-- Floating Actions -->
+    <div class="floating-actions" aria-label="Quick actions">
+      <!-- Ramadan quick button -->
+    <div class="audio-mode-container">
+      <button
+        id="ramadanModeBtn"
+        class="fab"
+        title="Ramadan Mode"
+        aria-label="Open Ramadan mode"
+      >
+        <span class="material-icons" aria-hidden="true">brightness_3</span>
+      </button>
+    </div>
 
-      <!-- Ramadan Mode Button (replaces Bookmark) -->
-      <div class="ramadan-container">
-        <button id="ramadanModeBtn" class="icon-btn" title="Ramadan Mode">
-          <span class="material-icons">brightness_3</span> <!-- crescent moon icon -->
-        </button>
-      </div>
-
-      <!-- ========== RAMADAN MODE SCREEN ========== -->
-      <div id="ramadanModeScreen" class="ramadan-mode-screen">
-        <div class="ramadan-mode-header">
-          <button style="background: transparent;" id="exitRamadanMode" class="icon-btn">
-            <div class="ramadan-date" style="display: flex; width: 10rem; justify-content: space-between; align-items: center;"><span class="material-icons">close</span> <span class="material-icons">rotate_left</span> <!--<p style="color: transparent;">ক্লোজ</p> --></div>
-          </button>
-          <div class="ramadan-mode-title">🌙 রমজান মোড</div>
-          <div class="ramadan-date" id="ramadanDate">১ রমজান ১৪৪৬</div>
-        </div>
-
-        <div class="ramadan-mode-main">
-          <!-- Next Iftar & Sehri Cards -->
-          <div class="ramadan-cards">
-            <div class="ramadan-card iftar-card">
-              <div class="card-label" id="iftarLabel">ইফতারের সময় বাকি</div>
-              <div class="card-time" id="iftarCountdown">--:--:--</div>
-              <div class="card-prayer">মাগরিব</div>
-            </div>
-            <div class="ramadan-card sehri-card">
-              <div class="card-label" id="sehriLabel">সেহরির সময় বাকি</div>
-              <div class="card-time" id="sehriCountdown">--:--:--</div>
-              <div class="card-prayer">ফজর</div>
-            </div>
-          </div>
-
-          <!-- Prayer Times Table -->
-          <div class="prayer-table-container">
-            <table class="prayer-table">
-              <thead>
-                <tr>
-                  <th>ওয়াক্ত</th>
-                  <th>নামজের সময়</th>
-                  <th>সময় বাকি</th>
-                </tr>
-              </thead>
-              <tbody id="prayerTimesBody">
-                <!-- Rows will be filled by JavaScript -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Azan Feature Note (optional) -->
-          <div class="azan-note">
-            <span class="material-icons">notifications_active</span> আযানের সময় হলে স্বয়ংক্রিয়ভাবে জানানো হবে
-          </div>
-        </div>
-      </div>
-
-      <!-- Google Apps Menu (unchanged – omitted for brevity) -->
-      <!-- <div class="google-apps-container">
-        <button id="googleAppsBtn" class="icon-btn" title="Google Apps">
-          <span class="material-icons">apps</span>
-        </button>
-        <div class="apps-dropdown" id="appsDropdown" style="display: none;">
-          your existing links
-        </div>
-      </div> -->
       <div class="audio-mode-container">
-        <button id="audioModeBtn" class="icon-btn" title="Audio Mode">
-          <span class="material-icons">headset</span>
+        <button id="audioModeBtn" class="fab" title="Audio Mode" aria-label="Open audio mode">
+          <span class="material-icons" aria-hidden="true">headset</span>
         </button>
       </div>
 
-      <!-- saved container For Saved Ayyat Reference List -->
       <div class="saved-container">
-        <button id="savedBtn" class="icon-btn" title="Saved Ayyat">
-          <span class="material-icons">star</span>
+        <button id="savedBtn" class="fab fab-soft" title="Saved Ayahs" aria-label="Open saved ayahs">
+          <span class="material-icons" aria-hidden="true">star</span>
         </button>
+
+        <div class="saved-dropdown" id="savedDropdown">
+          <div class="dropdown-card-header">
+            <h3>Saved Ayahs</h3>
+          </div>
+          <ul id="savedList"></ul>
+        </div>
       </div>
 
-      <!-- favourite container For save as Favourite-->
       <div class="favourite-container">
-        <button id="favouriteBtn" class="icon-btn" title="Click Here to add this as Favourite">
-          <span class="material-icons">star_border</span>
+        <button
+          id="favouriteBtn"
+          class="fab fab-accent"
+          title="Save Current Ayah"
+          aria-label="Save current ayah"
+        >
+          <span class="material-icons" aria-hidden="true">favorite_border</span>
         </button>
       </div>
+    </div>
 
-      <!-- Audio Mode Toggle Button -->
-
-      <div class="verse-container">
-        <button class="nav-btn" id="prevVerse">
-          <span class="material-icons mi-white">chevron_left</span>
-        </button>
-
-        <div class="verse-content">
-          <div class="verse-arabic" id="verseArabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
-          <div class="verse-translation" id="verseTranslation">
-            In the name of Allah, the Entirely Merciful, the Especially Merciful.
-          </div>
-          <div id="ayahSelectModal">
-            <div class="modal-content">
-              <h3>Go to Ayah</h3>
-              <select id="chapterSelect"></select>
-              <select id="verseSelect"></select>
-              <button id="goToAyahBtn">Go</button>
-              <button id="cancelAyahBtn">Cancel</button>
-            </div>
-          </div>
-          <div class="controls-container">
-            <div class="selectors-container">
-              <div class="custom-dropdown">
-                <button id="audioIconBtn" class="icon-btn" title="Select Reciter">
-                  <span class="material-icons mi-white">queue_music</span>
-                </button>
-                <ul class="dropdown-menu" id="reciterDropdown"></ul>
-              </div>
-
-              <div class="custom-dropdown">
-                <button id="translationIconBtn" class="icon-btn" title="Select Translation">
-                  <span class="material-icons mi-white">translate</span>
-                </button>
-                <ul class="dropdown-menu" id="translationDropdown"></ul>
-              </div>
-
-              <div class="autoplay-toggle">
-                <label class="switch">
-                  <input type="checkbox" id="autoplayToggle" />
-                  <span class="slider"></span>
-                  <span class="label-text">Auto-play</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="verse-info" id="verseInfo" style="cursor: pointer; text-decoration: underline;">
-              Surah Al-Fatihah (1:1)
-            </div>
-
-            <div class="audio-controls">
-              <audio id="audioPlayer" controls></audio>
-            </div>
-          </div>
-
-          <!-- Modal for selecting Surah and Ayah -->
-          <div id="ayahSelectModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-            align-items: center; justify-content: center;">
-            <div class="modal-content"
-              style="background: #2563eb; padding: 20px; border-radius: 8px; max-width: 320px; width: 90%;">
-              <h3>Select Ayah</h3>
-              <select id="chapterSelect" style="width: 100%; margin-top: 10px;"></select>
-              <select id="verseSelect" style="width: 100%; margin-top: 10px;"></select>
-              <button id="goToAyahBtn" style="margin-top: 10px; width: 100%;">Go</button>
-              <button id="cancelAyahBtn" style="margin-top: 5px; width: 100%;">Cancel</button>
-            </div>
-          </div>
-
+    <!-- Main -->
+    <main class="main-content">
+      <section class="hero-card glass">
+        <div class="hero-top">
+          <!-- <div class="hero-chip">
+            <span class="material-icons" aria-hidden="true">auto_stories</span>
+            <span>Daily Quran Reflection</span>
+          </div> -->
         </div>
 
-        <button class="nav-btn" id="nextVerse">
-          <span class="material-icons mi-white">chevron_right</span>
-        </button>
-      </div>
+        <div class="verse-container">
+          <button class="nav-btn" id="prevVerse" aria-label="Previous verse">
+            <span class="material-icons" aria-hidden="true">chevron_left</span>
+          </button>
+
+          <article class="verse-content">
+            <div class="ayah-badge">القرآن الكريم</div>
+
+            <div class="verse-arabic" id="verseArabic">
+              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+            </div>
+
+            <div class="verse-divider" aria-hidden="true"></div>
+
+            <div class="verse-translation" id="verseTranslation">
+              In the name of Allah, the Entirely Merciful, the Especially Merciful.
+            </div>
+
+            <button class="verse-info" id="verseInfo" type="button" aria-label="Open ayah selector">
+              Surah Al-Fatihah (1:1)
+            </button>
+
+            <div class="controls-container">
+              <div class="selectors-container">
+                <div class="custom-dropdown">
+                  <button
+                    id="audioIconBtn"
+                    class="icon-btn"
+                    type="button"
+                    title="Select Reciter"
+                    aria-label="Select reciter"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <span class="material-icons" aria-hidden="true">queue_music</span>
+                  </button>
+                  <ul class="dropdown-menu" id="reciterDropdown" role="menu"></ul>
+                </div>
+
+                <div class="custom-dropdown">
+                  <button
+                    id="translationIconBtn"
+                    class="icon-btn"
+                    type="button"
+                    title="Select Translation"
+                    aria-label="Select translation"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <span class="material-icons" aria-hidden="true">translate</span>
+                  </button>
+                  <ul class="dropdown-menu" id="translationDropdown" role="menu"></ul>
+                </div>
+
+                <div class="autoplay-toggle">
+                  <label class="switch">
+                    <input type="checkbox" id="autoplayToggle" />
+                    <span class="slider" aria-hidden="true"></span>
+                    <span class="label-text">Auto-play</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="audio-controls">
+                <audio id="audioPlayer" controls preload="metadata"></audio>
+              </div>
+            </div>
+          </article>
+
+          <button class="nav-btn" id="nextVerse" aria-label="Next verse">
+            <span class="material-icons" aria-hidden="true">chevron_right</span>
+          </button>
+        </div>
+      </section>
     </main>
 
-    <footer class="footer">
+    <!-- Footer -->
+    <footer class="footer glass">
       <div class="quote-container" id="quoteContainer">
         "And We have certainly made the Quran easy for remembrance, so is there any who will remember?" (Quran 54:17)
       </div>
-      <a class="overlay-link" target="_blank" href="https://ashik360.github.io">Contact Developer → @ashik360</a>
+      <a
+        class="overlay-link"
+        target="_blank"
+        rel="noopener noreferrer"
+        href="https://ashik360.github.io"
+      >
+        Contact Developer → @ashik360
+      </a>
     </footer>
   </div>
 
+  <!-- Ayah Select Modal -->
+  <div id="ayahSelectModal" class="modal" aria-hidden="true">
+    <div class="modal-content glass-dark">
+      <h3>Go to Ayah</h3>
+      <select id="chapterSelect" aria-label="Select surah"></select>
+      <select id="verseSelect" aria-label="Select ayah"></select>
+      <button id="goToAyahBtn" type="button">Go</button>
+      <button id="cancelAyahBtn" class="secondary-btn" type="button">Cancel</button>
+    </div>
+  </div>
+
   <!-- Loading Overlay -->
-  <div id="loadingOverlay">
-    <div class="animated-spinner">
+  <div id="loadingOverlay" aria-hidden="true">
+    <div class="animated-spinner" aria-hidden="true">
       <div></div>
       <div></div>
       <div></div>
@@ -221,38 +220,110 @@
     <div class="loading-text">Loading...</div>
   </div>
 
-  <!-- ========== AUDIO MODE (enhanced) ========== -->
-  <div id="audioModeScreen" class="audio-mode-screen">
-    <div class="audio-mode-header">
-      <button id="exitAudioMode" class="icon-btn">
-        <span class="material-icons">close</span>
+  <!-- Ramadan Mode -->
+  <div id="ramadanModeScreen" class="ramadan-mode-screen" aria-hidden="true">
+    <div class="ramadan-mode-header glass-dark">
+      <button
+        id="exitRamadanMode"
+        class="icon-btn transparent-btn"
+        type="button"
+        aria-label="Exit Ramadan mode"
+      >
+        <span class="material-icons" aria-hidden="true">close</span>
       </button>
+
+      <div class="ramadan-mode-title">🌙 রমজান মোড</div>
+
+      <div class="ramadan-date" id="ramadanDate">১ রমজান ১৪৪৬</div>
+    </div>
+
+    <div class="ramadan-mode-main">
+      <div class="ramadan-cards">
+        <div class="ramadan-card iftar-card">
+          <div class="card-label" id="iftarLabel">ইফতার শুরু হতে সময় বাকি</div>
+          <div class="card-time" id="iftarCountdown">--:--:--</div>
+          <div class="card-prayer">মাগরিব</div>
+        </div>
+
+        <div class="ramadan-card sehri-card">
+          <div class="card-label" id="sehriLabel">সেহরির সময় বাকি</div>
+          <div class="card-time" id="sehriCountdown">--:--:--</div>
+          <div class="card-prayer">ফজর</div>
+        </div>
+      </div>
+
+      <div class="prayer-table-container glass-dark">
+        <table class="prayer-table">
+          <thead>
+            <tr>
+              <th>ওয়াক্ত</th>
+              <th>নামাজের সময়</th>
+              <th>সময় বাকি</th>
+            </tr>
+          </thead>
+          <tbody id="prayerTimesBody"></tbody>
+        </table>
+      </div>
+
+      <div class="azan-note">
+        <span class="material-icons" aria-hidden="true">notifications_active</span>
+        আযানের সময় হলে স্বয়ংক্রিয়ভাবে জানানো হবে
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Mode -->
+  <div id="audioModeScreen" class="audio-mode-screen" aria-hidden="true">
+    <div class="audio-mode-header glass-dark">
+      <button
+        id="exitAudioMode"
+        class="icon-btn transparent-btn"
+        type="button"
+        aria-label="Exit audio mode"
+      >
+        <span class="material-icons" aria-hidden="true">close</span>
+      </button>
+
       <div class="audio-mode-title">অডিও মোড</div>
-      <button class="icon-btn flex-wrap" id="showTafseer">
-        <span class="material-icons" title="তাফসীর">menu_book</span>
+
+      <button
+        class="icon-btn transparent-btn"
+        id="showTafseer"
+        type="button"
+        aria-label="Open tafseer"
+      >
+        <span class="material-icons" aria-hidden="true">menu_book</span>
       </button>
     </div>
 
     <div class="audio-mode-main">
-      <!-- Surah Circle with beautiful calligraphy -->
       <div class="surah-circle-container">
         <div class="surah-circle">
-          <svg width="0" height="0">
+          <svg width="0" height="0" aria-hidden="true" focusable="false">
             <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#3b82f6" />
-                <stop offset="50%" stop-color="#8b5cf6" />
-                <stop offset="100%" stop-color="#ec4899" />
+              <linearGradient id="audioGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#60a5fa"></stop>
+                <stop offset="50%" stop-color="#a78bfa"></stop>
+                <stop offset="100%" stop-color="#22d3ee"></stop>
               </linearGradient>
             </defs>
           </svg>
+
           <div class="circle-progress">
-            <svg class="progress-ring" width="300" height="300">
+            <svg class="progress-ring" width="300" height="300" viewBox="0 0 300 300" aria-hidden="true">
               <circle class="progress-ring__background" cx="150" cy="150" r="140"></circle>
               <circle class="progress-ring__circle" cx="150" cy="150" r="140"></circle>
             </svg>
           </div>
-          <div class="surah-circle-inner" id="audioSurahTrigger" title="Select Surah & Ayah">
+
+          <div
+            class="surah-circle-inner"
+            id="audioSurahTrigger"
+            title="Select Surah & Ayah"
+            role="button"
+            tabindex="0"
+            aria-label="Select surah and ayah"
+          >
             <div class="surah-name-arabic" id="audioSurahArabic">الفاتحة</div>
             <div class="surah-name-bengali" id="audioSurahBengali">সূরা আল-ফাতিহা</div>
             <div class="current-ayah" id="currentAyahNumber">আয়াত ১</div>
@@ -260,153 +331,190 @@
         </div>
       </div>
 
-      <!-- Reciter & Translation selectors (same as main screen) -->
-      <div class="audio-mode-selectors">
+      <div class="audio-mode-selectors glass-dark">
         <div class="custom-dropdown audio-mode-dropdown">
-          <button id="audioReciterBtn" class="control-btn small" title="Select Reciter">
-            <span class="material-icons">queue_music</span>
+          <button
+            id="audioReciterBtn"
+            class="control-btn small"
+            type="button"
+            title="Select Reciter"
+            aria-label="Select reciter"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span class="material-icons" aria-hidden="true">queue_music</span>
           </button>
-          <ul class="dropdown-menu" id="audioReciterDropdown"></ul>
+          <ul class="dropdown-menu" id="audioReciterDropdown" role="menu"></ul>
         </div>
 
         <div class="custom-dropdown audio-mode-dropdown">
-          <button id="audioTranslationBtn" class="control-btn small" title="Select Translation">
-            <span class="material-icons">translate</span>
+          <button
+            id="audioTranslationBtn"
+            class="control-btn small"
+            type="button"
+            title="Select Translation"
+            aria-label="Select translation"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span class="material-icons" aria-hidden="true">translate</span>
           </button>
-          <ul class="dropdown-menu" id="audioTranslationDropdown"></ul>
+          <ul class="dropdown-menu" id="audioTranslationDropdown" role="menu"></ul>
         </div>
 
         <div class="control-row">
-          <button id="audioRepeat" class="control-btn small" title="Repeat One & All">
-            <span class="material-icons" title="পুনরাবৃত্তি">repeat</span>
+          <button id="audioRepeat" class="control-btn small" type="button" title="Repeat" aria-label="Repeat mode">
+            <span class="material-icons" aria-hidden="true">repeat</span>
           </button>
-          <button id="audioAutoPlay" class="control-btn small active" title="Auto Play Next/স্বয়ংক্রিয়">
-            <span class="material-icons">play_circle_filled</span>
+          <button
+            id="audioAutoPlay"
+            class="control-btn small active"
+            type="button"
+            title="Auto Play"
+            aria-label="Toggle auto play"
+          >
+            <span class="material-icons" aria-hidden="true">play_circle_filled</span>
           </button>
-          <button id="audioShuffle" class="control-btn small" title="Repeat & Shuffle">
-            <span class="material-icons" title="রেন্ডম">shuffle</span>
+          <button id="audioShuffle" class="control-btn small" type="button" title="Shuffle" aria-label="Shuffle mode">
+            <span class="material-icons" aria-hidden="true">shuffle</span>
           </button>
-          <button id="audioSpeed" class="control-btn small" title="Playback Speed">
-            <span class="material-icons" title="গতি">speed</span>
+          <button id="audioSpeed" class="control-btn small" type="button" title="Playback Speed" aria-label="Playback speed">
+            <span class="material-icons" aria-hidden="true">speed</span>
           </button>
-          <button id="audioSleep" class="control-btn small" title="Sleep Timer">
-            <span class="material-icons" title="টাইমার">timer</span>
+          <button id="audioSleep" class="control-btn small" type="button" title="Sleep Timer" aria-label="Sleep timer">
+            <span class="material-icons" aria-hidden="true">timer</span>
           </button>
         </div>
       </div>
 
-      <!-- Main Audio Controls -->
-      <div class="audio-mode-controls">
+      <div class="audio-mode-controls glass-dark">
         <div class="control-row">
-          <button id="audioPrev" class="control-btn large">
-            <span class="material-icons">skip_previous</span>
+          <button id="audioPrev" class="control-btn large" type="button" aria-label="Previous ayah">
+            <span class="material-icons" aria-hidden="true">skip_previous</span>
           </button>
-          <button id="audioPlayPause" class="control-btn primary large">
-            <span class="material-icons" id="playPauseIcon">play_arrow</span>
+          <button id="audioPlayPause" class="control-btn primary large" type="button" aria-label="Play or pause">
+            <span class="material-icons" id="playPauseIcon" aria-hidden="true">play_arrow</span>
           </button>
-          <button id="audioNext" class="control-btn large">
-            <span class="material-icons">skip_next</span>
+          <button id="audioNext" class="control-btn large" type="button" aria-label="Next ayah">
+            <span class="material-icons" aria-hidden="true">skip_next</span>
           </button>
         </div>
 
         <div class="volume-control">
-          <span class="material-icons">volume_down</span>
-          <input type="range" id="audioVolume" min="0" max="100" value="80" class="volume-slider">
-          <span class="material-icons">volume_up</span>
+          <span class="material-icons" aria-hidden="true">volume_down</span>
+          <input
+            type="range"
+            id="audioVolume"
+            min="0"
+            max="100"
+            value="80"
+            class="volume-slider"
+            aria-label="Volume"
+          />
+          <span class="material-icons" aria-hidden="true">volume_up</span>
         </div>
 
         <div class="audio-progress-container">
-          <div class="progress-time" id="currentTime">à§¦à§¦:à§¦à§¦</div>
+          <div class="progress-time" id="currentTime">০০:০০</div>
           <div class="progress-bar-container">
-            <input type="range" id="audioProgress" min="0" max="100" value="0" class="progress-slider">
+            <input
+              type="range"
+              id="audioProgress"
+              min="0"
+              max="100"
+              value="0"
+              class="progress-slider"
+              aria-label="Audio progress"
+            />
             <div class="progress-fill"></div>
           </div>
-          <div class="progress-time" id="totalTime">à§¦à§¦:à§¦à§¦</div>
+          <div class="progress-time" id="totalTime">০০:০০</div>
         </div>
 
         <div class="reciter-info">
           <div class="reciter-name" id="audioReciterName">আবু বকর আশ-শাত্রী</div>
-          <div class="reciter-quality">১২৮kbps • এমপিথ্রি</div>
+          <div class="reciter-quality">128kbps • MP3</div>
         </div>
       </div>
     </div>
 
-    <div class="audio-mode-footer">
+    <div class="audio-mode-footer glass-dark">
       <div class="additional-controls">
-        <button class="info-btn" id="showTafseerFooter">
-          <span class="material-icons">menu_book</span>
+        <button class="info-btn" id="showTafseerFooter" type="button">
+          <span class="material-icons" aria-hidden="true">menu_book</span>
           <span>তাফসীর</span>
         </button>
-        <button class="info-btn" id="showTranslation">
-          <span class="material-icons">translate</span>
+        <button class="info-btn" id="showTranslation" type="button">
+          <span class="material-icons" aria-hidden="true">translate</span>
           <span>অনুবাদ</span>
         </button>
-        <button class="info-btn" id="bookmarkAudio">
-          <span class="material-icons">bookmark_add</span>
+        <button class="info-btn" id="bookmarkAudio" type="button">
+          <span class="material-icons" aria-hidden="true">bookmark_add</span>
           <span>বুকমার্ক</span>
         </button>
-        <button class="info-btn" id="shareAudio">
-          <span class="material-icons">share</span>
-          <span>শেয়ার</span>
+        <button class="info-btn" id="shareAudio" type="button">
+          <span class="material-icons" aria-hidden="true">share</span>
+          <span>শেয়ার</span>
         </button>
       </div>
     </div>
 
-    <div class="audio-ayah-drawer" id="audioAyahDrawer" aria-hidden="true">
+    <!-- Audio Ayah Drawer -->
+    <div class="audio-ayah-drawer glass-dark" id="audioAyahDrawer" aria-hidden="true">
       <div class="drawer-header">
         <div class="drawer-title">সুরা ও আয়াত</div>
-        <button class="icon-btn small" id="audioAyahClose" title="Close">
-          <span class="material-icons">close</span>
+        <button class="icon-btn small" id="audioAyahClose" type="button" aria-label="Close ayah drawer">
+          <span class="material-icons" aria-hidden="true">close</span>
         </button>
       </div>
+
       <div class="drawer-body">
-        <select id="audioChapterSelect" style="width: 100%; margin-top: 10px;"></select>
-        <select id="audioVerseSelect" style="width: 100%; margin-top: 10px;"></select>
-        <button id="audioGoToAyahBtn" style="margin-top: 10px; width: 100%;">Go</button>
-        <button id="audioCancelAyahBtn" style="margin-top: 5px; width: 100%;">Cancel</button>
+        <select id="audioChapterSelect" aria-label="Select surah"></select>
+        <select id="audioVerseSelect" aria-label="Select ayah"></select>
+        <button id="audioGoToAyahBtn" type="button">Go</button>
+        <button id="audioCancelAyahBtn" class="secondary-btn" type="button">Cancel</button>
       </div>
     </div>
 
-    <div class="audio-side-drawer" id="audioSideDrawer" aria-hidden="true">
+    <!-- Audio Side Drawer -->
+    <div class="audio-side-drawer glass-dark" id="audioSideDrawer" aria-hidden="true">
       <div class="drawer-header">
         <div class="drawer-title" id="audioDrawerTitle">তাফসীর</div>
-        <button class="icon-btn small" id="audioDrawerClose" title="Close">
-          <span class="material-icons">close</span>
+        <button class="icon-btn small" id="audioDrawerClose" type="button" aria-label="Close side drawer">
+          <span class="material-icons" aria-hidden="true">close</span>
         </button>
       </div>
-      <div class="drawer-body" id="audioDrawerBody">
-        শীঘ্রই আসছে
-      </div>
+      <div class="drawer-body" id="audioDrawerBody">শীঘ্রই আসছে</div>
     </div>
 
-    <div class="speed-modal" id="speedModal">
+    <!-- Speed Modal -->
+    <div class="speed-modal" id="speedModal" aria-hidden="true">
       <div class="speed-options">
         <div class="speed-title">পাঠের গতি</div>
-        <button class="speed-option" data-speed="0.5">0.5x</button>
-        <button class="speed-option" data-speed="0.75">0.75x</button>
-        <button class="speed-option active" data-speed="1">1x</button>
-        <button class="speed-option" data-speed="1.25">1.25x</button>
-        <button class="speed-option" data-speed="1.5">1.5x</button>
-        <button class="speed-option" data-speed="2">2x</button>
+        <button class="speed-option" type="button" data-speed="0.5">0.5x</button>
+        <button class="speed-option" type="button" data-speed="0.75">0.75x</button>
+        <button class="speed-option active" type="button" data-speed="1">1x</button>
+        <button class="speed-option" type="button" data-speed="1.25">1.25x</button>
+        <button class="speed-option" type="button" data-speed="1.5">1.5x</button>
+        <button class="speed-option" type="button" data-speed="2">2x</button>
       </div>
     </div>
 
     <!-- Sleep Timer Modal -->
-    <div class="sleep-modal" id="sleepModal">
+    <div class="sleep-modal" id="sleepModal" aria-hidden="true">
       <div class="sleep-options">
         <div class="sleep-title">ঘুমের টাইমার</div>
-        <button class="sleep-option" data-minutes="5">৫ মিনিট</button>
-        <button class="sleep-option" data-minutes="10">১০ মিনিট</button>
-        <button class="sleep-option" data-minutes="15">১৫ মিনিট</button>
-        <button class="sleep-option" data-minutes="30">৩০ মিনিট</button>
-        <button class="sleep-option" data-minutes="45">৪৫ মিনিট</button>
-        <button class="sleep-option" data-minutes="60">৬০ মিনিট</button>
-        <button class="sleep-option" data-minutes="0">বন্ধ করুন</button>
+        <button class="sleep-option" type="button" data-minutes="5">৫ মিনিট</button>
+        <button class="sleep-option" type="button" data-minutes="10">১০ মিনিট</button>
+        <button class="sleep-option" type="button" data-minutes="15">১৫ মিনিট</button>
+        <button class="sleep-option" type="button" data-minutes="30">৩০ মিনিট</button>
+        <button class="sleep-option" type="button" data-minutes="45">৪৫ মিনিট</button>
+        <button class="sleep-option" type="button" data-minutes="60">৬০ মিনিট</button>
+        <button class="sleep-option" type="button" data-minutes="0">বন্ধ করুন</button>
       </div>
     </div>
   </div>
 
   <script src="script.js"></script>
 </body>
-
 </html>
