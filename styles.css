@@ -235,16 +235,18 @@ ul {
 /* ========== FLOATING ACTIONS ========== */
 .floating-actions {
   position: fixed;
-  inset: 180px 16px 110px auto;
+  top: 50%;
+  right: 1%;
   z-index: 1001;
   display: flex;
   flex-direction: column;
   gap: 14px;
   align-items: flex-end;
   pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
-.floating-actions > div {
+.floating-actions>div {
   position: relative;
   pointer-events: auto;
 }
@@ -327,10 +329,7 @@ ul {
   position: relative;
   z-index: 1;
   padding:
-    calc(var(--header-h) + 34px)
-    16px
-    calc(var(--footer-h) + 34px)
-    16px;
+    calc(var(--header-h) + 34px) 16px calc(var(--footer-h) + 34px) 16px;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -598,11 +597,11 @@ ul {
   transition: transform 0.25s ease;
 }
 
-.switch input:checked + .slider {
+.switch input:checked+.slider {
   background: linear-gradient(135deg, #10b981, #3b82f6);
 }
 
-.switch input:checked + .slider::before {
+.switch input:checked+.slider::before {
   transform: translateX(24px);
 }
 
@@ -1459,6 +1458,7 @@ ul {
     transform: translateX(110%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -1470,6 +1470,7 @@ ul {
     transform: translateX(0);
     opacity: 1;
   }
+
   to {
     transform: translateX(110%);
     opacity: 0;
@@ -1481,6 +1482,7 @@ ul {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1491,6 +1493,7 @@ ul {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1500,9 +1503,11 @@ ul {
   0% {
     filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.22));
   }
+
   50% {
     filter: drop-shadow(0 0 28px rgba(59, 130, 246, 0.42));
   }
+
   100% {
     filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.22));
   }
@@ -1615,9 +1620,9 @@ ul {
   }
 
   .floating-actions {
-    right: 12px;
-    bottom: 116px;
-    inset: 210px 12px 116px auto;
+    right: 1%;
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .ramadan-container {
@@ -1753,10 +1758,10 @@ ul {
   }
 
   :root {
-        --header-h: 80px;
-        --footer-h: 94px;
-        --fab-size: 30px;
-    }
+    --header-h: 80px;
+    --footer-h: 94px;
+    --fab-size: 30px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1979,7 +1984,7 @@ ul {
     width: min(68vw, 200px) !important;
   }
 
-  .audio-mode-selectors{
+  .audio-mode-selectors {
     display: none;
   }
 

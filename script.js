@@ -1135,7 +1135,7 @@
     // Iftar
     if (now < maghribToday) {
       const remain = getRemainingParts(maghribToday);
-      elements.iftarLabel.textContent = "ইফতারের সময় বাকি";
+      elements.iftarLabel.textContent = "ইফতার শুরু হতে সময় বাকি";
       elements.iftarCountdown.textContent = formatDurationBangla(remain.hours, remain.minutes, remain.seconds);
     } else {
       elements.iftarLabel.textContent = "আগামীকাল ইফতার";
