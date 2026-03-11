@@ -27,6 +27,11 @@
     ramadanInterval: null,
     azanInterval: null,
     prayerRefreshInterval: null,
+    prayerTimesCache: [],
+    lastAzanPlayed: {},
+    lastPlayedAzanKey: null,
+    currentAzanKey: null,
+    lastCheckedMinute: null,
 
     savedAyahs: JSON.parse(localStorage.getItem("savedAyahs") || "[]"),
     surahAyahCounts: {},
@@ -466,7 +471,7 @@
         elements.quoteContainer.textContent = data.data.text;
         return;
       }
-    } catch (_) {}
+    } catch (_) { }
 
     if (elements.quoteContainer) {
       elements.quoteContainer.textContent = fallback[Math.floor(Math.random() * fallback.length)];
@@ -590,7 +595,7 @@
       elements.audioPlayer.load();
 
       if (autoplay) {
-        await elements.audioPlayer.play().catch(() => {});
+        await elements.audioPlayer.play().catch(() => { });
       }
 
       updateAudioModeDisplay();
@@ -859,21 +864,21 @@
   async function handleAudioEnded() {
     if (state.repeatMode === "repeat-one") {
       elements.audioPlayer.currentTime = 0;
-      await elements.audioPlayer.play().catch(() => {});
+      await elements.audioPlayer.play().catch(() => { });
       return;
     }
 
     if (state.repeatMode === "repeat-all") {
       await nextVerse();
       if (!elements.audioPlayer.paused) {
-        await elements.audioPlayer.play().catch(() => {});
+        await elements.audioPlayer.play().catch(() => { });
       }
       return;
     }
 
     if (state.isAutoplayEnabled) {
       await nextVerse();
-      await elements.audioPlayer.play().catch(() => {});
+      await elements.audioPlayer.play().catch(() => { });
     }
   }
 
@@ -1100,7 +1105,7 @@
       state.hijriCache = { dateKey: today, text };
       return text;
     } catch (_) {
-      return "রমজান ১৪৪৬";
+      return "রমজান ১৪৪৭";
     }
   }
 
@@ -1205,29 +1210,88 @@
     }
   }
 
-  function playAzan(prayerName) {
-    showNotification(`🕌 ${prayerName} নামাজের সময় হয়েছে`);
-    azanAudio.currentTime = 0;
-    azanAudio.play().catch(() => {});
-  }
+  function playAzan(prayerName, azanKey) {
+  // যদি এই azan already play হয়ে থাকে বা এখন play হয়, তাহলে skip
+  if (state.currentAzanKey === azanKey) return;
+  if (!azanAudio.paused) return;
 
-  function checkPrayerTimeAndPlayAzan() {
-    if (!state.prayerTimesCache.length) return;
+  state.currentAzanKey = azanKey;
+  state.lastPlayedAzanKey = azanKey;
 
-    const now = new Date();
-    const current = now.toTimeString().slice(0, 5);
-    const dayKey = now.toDateString();
+  showNotification(`🕌 ${prayerName} নামাজের সময় হয়েছে`);
 
-    state.prayerTimesCache.forEach((prayer) => {
-      if (cleanPrayerTime(prayer.time) === current) {
-        const azanKey = `${prayer.name}-${current}-${dayKey}`;
-        if (state.lastAzanPlayed[prayer.name] !== azanKey) {
-          playAzan(prayer.name);
-          state.lastAzanPlayed[prayer.name] = azanKey;
-        }
+  azanAudio.currentTime = 0;
+  azanAudio.play().catch(() => {
+    state.currentAzanKey = null;
+  });
+}
+
+function checkPrayerTimeAndPlayAzan() {
+  if (!state.prayerTimesCache.length) return;
+
+  const now = new Date();
+  const current = now.toTimeString().slice(0, 5);
+  const dayKey = now.toDateString();
+
+  // একই মিনিটে একবারের বেশি check হলে skip
+  const minuteKey = `${dayKey}-${current}`;
+  if (state.lastCheckedMinute === minuteKey) return;
+  state.lastCheckedMinute = minuteKey;
+
+  for (const prayer of state.prayerTimesCache) {
+    if (cleanPrayerTime(prayer.time) === current) {
+      const azanKey = `${prayer.name}-${current}-${dayKey}`;
+
+      if (state.lastPlayedAzanKey !== azanKey) {
+        playAzan(prayer.name, azanKey);
       }
-    });
+      break; // এক prayer time-এ একবারই play
+    }
   }
+}
+
+// V2
+/*
+function playAzan(prayerName, azanKey) {
+  if (state.lastPlayedAzanKey === azanKey) return;
+  if (!azanAudio.paused) return;
+
+  state.lastPlayedAzanKey = azanKey;
+  state.currentAzanKey = azanKey;
+
+  showNotification(`🕌 ${prayerName} নামাজের সময় হয়েছে`);
+
+  azanAudio.currentTime = 0;
+  azanAudio.play().catch(() => {
+    state.currentAzanKey = null;
+  });
+}
+
+function checkPrayerTimeAndPlayAzan() {
+  if (!state.prayerTimesCache.length) return;
+
+  const now = new Date();
+  const current = now.toTimeString().slice(0, 5);
+  const dayKey = now.toDateString();
+
+  for (const prayer of state.prayerTimesCache) {
+    if (cleanPrayerTime(prayer.time) === current) {
+      const azanKey = `${prayer.name}-${current}-${dayKey}`;
+      playAzan(prayer.name, azanKey);
+      break;
+    }
+  }
+}
+
+azanAudio.addEventListener("ended", () => {
+  state.currentAzanKey = null;
+});
+*/
+
+// azan শেষ হলে lock release হবে
+azanAudio.addEventListener("ended", () => {
+  state.currentAzanKey = null;
+});
 
   async function initPrayerSystem() {
     state.prayerTimesCache = await fetchPrayerTimes("Dhaka", "Bangladesh");
@@ -1424,7 +1488,7 @@
             text,
             url: location.href
           });
-        } catch (_) {}
+        } catch (_) { }
       } else {
         try {
           await navigator.clipboard.writeText(text);
@@ -1548,7 +1612,7 @@
             azanAudio.pause();
             azanAudio.currentTime = 0;
           })
-          .catch(() => {});
+          .catch(() => { });
       },
       { once: true }
     );

@@ -1351,6 +1351,7 @@ ul {
   padding: 22px 18px 28px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
   gap: 24px;
 }
@@ -2009,5 +2010,15 @@ ul {
     font-size: clamp(0.7rem, 2.8vw, 0.9rem);
     padding: 6px 10px;
     min-height: 30px;
+  }
+}
+
+.d-none {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .autoplay-toggle.d-none {
+    display: block;
   }
 }

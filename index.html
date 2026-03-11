@@ -1,32 +1,21 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-  <meta
-    name="description"
-    content="Quran Tab - Premium responsive Quran reading, audio mode, saved ayahs, and Ramadan mode experience."
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description"
+    content="Quran Tab - Premium responsive Quran reading, audio mode, saved ayahs, and Ramadan mode experience." />
   <meta name="theme-color" content="#0f3d91" />
   <title>Quran Tab</title>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Icons&display=swap"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <div class="app-shell">
     <!-- Background decoration -->
@@ -55,16 +44,11 @@
     <!-- Floating Actions -->
     <div class="floating-actions" aria-label="Quick actions">
       <!-- Ramadan quick button -->
-    <div class="audio-mode-container">
-      <button
-        id="ramadanModeBtn"
-        class="fab"
-        title="Ramadan Mode"
-        aria-label="Open Ramadan mode"
-      >
-        <span class="material-icons" aria-hidden="true">brightness_3</span>
-      </button>
-    </div>
+      <div class="audio-mode-container">
+        <button id="ramadanModeBtn" class="fab" title="Ramadan Mode" aria-label="Open Ramadan mode">
+          <span class="material-icons" aria-hidden="true">brightness_3</span>
+        </button>
+      </div>
 
       <div class="audio-mode-container">
         <button id="audioModeBtn" class="fab" title="Audio Mode" aria-label="Open audio mode">
@@ -86,12 +70,7 @@
       </div>
 
       <div class="favourite-container">
-        <button
-          id="favouriteBtn"
-          class="fab fab-accent"
-          title="Save Current Ayah"
-          aria-label="Save current ayah"
-        >
+        <button id="favouriteBtn" class="fab fab-accent" title="Save Current Ayah" aria-label="Save current ayah">
           <span class="material-icons" aria-hidden="true">favorite_border</span>
         </button>
       </div>
@@ -132,30 +111,16 @@
             <div class="controls-container">
               <div class="selectors-container">
                 <div class="custom-dropdown">
-                  <button
-                    id="audioIconBtn"
-                    class="icon-btn"
-                    type="button"
-                    title="Select Reciter"
-                    aria-label="Select reciter"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
+                  <button id="audioIconBtn" class="icon-btn" type="button" title="Select Reciter"
+                    aria-label="Select reciter" aria-haspopup="true" aria-expanded="false">
                     <span class="material-icons" aria-hidden="true">queue_music</span>
                   </button>
                   <ul class="dropdown-menu" id="reciterDropdown" role="menu"></ul>
                 </div>
 
                 <div class="custom-dropdown">
-                  <button
-                    id="translationIconBtn"
-                    class="icon-btn"
-                    type="button"
-                    title="Select Translation"
-                    aria-label="Select translation"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
+                  <button id="translationIconBtn" class="icon-btn" type="button" title="Select Translation"
+                    aria-label="Select translation" aria-haspopup="true" aria-expanded="false">
                     <span class="material-icons" aria-hidden="true">translate</span>
                   </button>
                   <ul class="dropdown-menu" id="translationDropdown" role="menu"></ul>
@@ -188,12 +153,7 @@
       <div class="quote-container" id="quoteContainer">
         "And We have certainly made the Quran easy for remembrance, so is there any who will remember?" (Quran 54:17)
       </div>
-      <a
-        class="overlay-link"
-        target="_blank"
-        rel="noopener noreferrer"
-        href="https://ashik360.github.io"
-      >
+      <a class="overlay-link" target="_blank" rel="noopener noreferrer" href="https://ashik360.github.io">
         Contact Developer → @ashik360
       </a>
     </footer>
@@ -223,18 +183,13 @@
   <!-- Ramadan Mode -->
   <div id="ramadanModeScreen" class="ramadan-mode-screen" aria-hidden="true">
     <div class="ramadan-mode-header glass-dark">
-      <button
-        id="exitRamadanMode"
-        class="icon-btn transparent-btn"
-        type="button"
-        aria-label="Exit Ramadan mode"
-      >
+      <button id="exitRamadanMode" class="icon-btn transparent-btn" type="button" aria-label="Exit Ramadan mode">
         <span class="material-icons" aria-hidden="true">close</span>
       </button>
 
       <div class="ramadan-mode-title">🌙 রমজান মোড</div>
 
-      <div class="ramadan-date" id="ramadanDate">১ রমজান ১৪৪৬</div>
+      <div class="ramadan-date" id="ramadanDate">১ রমজান ১৪৪৭</div>
     </div>
 
     <div class="ramadan-mode-main">
@@ -258,7 +213,7 @@
             <tr>
               <th>ওয়াক্ত</th>
               <th>নামাজের সময়</th>
-              <th>সময় বাকি</th>
+              <th>ওয়াক্ত শুরুর সময় বাকি</th>
             </tr>
           </thead>
           <tbody id="prayerTimesBody"></tbody>
@@ -275,23 +230,13 @@
   <!-- Audio Mode -->
   <div id="audioModeScreen" class="audio-mode-screen" aria-hidden="true">
     <div class="audio-mode-header glass-dark">
-      <button
-        id="exitAudioMode"
-        class="icon-btn transparent-btn"
-        type="button"
-        aria-label="Exit audio mode"
-      >
+      <button id="exitAudioMode" class="icon-btn transparent-btn" type="button" aria-label="Exit audio mode">
         <span class="material-icons" aria-hidden="true">close</span>
       </button>
 
       <div class="audio-mode-title">অডিও মোড</div>
 
-      <button
-        class="icon-btn transparent-btn"
-        id="showTafseer"
-        type="button"
-        aria-label="Open tafseer"
-      >
+      <button class="icon-btn transparent-btn" id="showTafseer" type="button" aria-label="Open tafseer">
         <span class="material-icons" aria-hidden="true">menu_book</span>
       </button>
     </div>
@@ -316,14 +261,8 @@
             </svg>
           </div>
 
-          <div
-            class="surah-circle-inner"
-            id="audioSurahTrigger"
-            title="Select Surah & Ayah"
-            role="button"
-            tabindex="0"
-            aria-label="Select surah and ayah"
-          >
+          <div class="surah-circle-inner" id="audioSurahTrigger" title="Select Surah & Ayah" role="button" tabindex="0"
+            aria-label="Select surah and ayah">
             <div class="surah-name-arabic" id="audioSurahArabic">الفاتحة</div>
             <div class="surah-name-bengali" id="audioSurahBengali">সূরা আল-ফাতিহা</div>
             <div class="current-ayah" id="currentAyahNumber">আয়াত ১</div>
@@ -333,30 +272,16 @@
 
       <div class="audio-mode-selectors glass-dark">
         <div class="custom-dropdown audio-mode-dropdown">
-          <button
-            id="audioReciterBtn"
-            class="control-btn small"
-            type="button"
-            title="Select Reciter"
-            aria-label="Select reciter"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
+          <button id="audioReciterBtn" class="control-btn small" type="button" title="Select Reciter"
+            aria-label="Select reciter" aria-haspopup="true" aria-expanded="false">
             <span class="material-icons" aria-hidden="true">queue_music</span>
           </button>
           <ul class="dropdown-menu" id="audioReciterDropdown" role="menu"></ul>
         </div>
 
         <div class="custom-dropdown audio-mode-dropdown">
-          <button
-            id="audioTranslationBtn"
-            class="control-btn small"
-            type="button"
-            title="Select Translation"
-            aria-label="Select translation"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
+          <button id="audioTranslationBtn" class="control-btn small" type="button" title="Select Translation"
+            aria-label="Select translation" aria-haspopup="true" aria-expanded="false">
             <span class="material-icons" aria-hidden="true">translate</span>
           </button>
           <ul class="dropdown-menu" id="audioTranslationDropdown" role="menu"></ul>
@@ -366,19 +291,15 @@
           <button id="audioRepeat" class="control-btn small" type="button" title="Repeat" aria-label="Repeat mode">
             <span class="material-icons" aria-hidden="true">repeat</span>
           </button>
-          <button
-            id="audioAutoPlay"
-            class="control-btn small active"
-            type="button"
-            title="Auto Play"
-            aria-label="Toggle auto play"
-          >
+          <button id="audioAutoPlay" class="control-btn small active" type="button" title="Auto Play"
+            aria-label="Toggle auto play">
             <span class="material-icons" aria-hidden="true">play_circle_filled</span>
           </button>
           <button id="audioShuffle" class="control-btn small" type="button" title="Shuffle" aria-label="Shuffle mode">
             <span class="material-icons" aria-hidden="true">shuffle</span>
           </button>
-          <button id="audioSpeed" class="control-btn small" type="button" title="Playback Speed" aria-label="Playback speed">
+          <button id="audioSpeed" class="control-btn small" type="button" title="Playback Speed"
+            aria-label="Playback speed">
             <span class="material-icons" aria-hidden="true">speed</span>
           </button>
           <button id="audioSleep" class="control-btn small" type="button" title="Sleep Timer" aria-label="Sleep timer">
@@ -402,30 +323,22 @@
 
         <div class="volume-control">
           <span class="material-icons" aria-hidden="true">volume_down</span>
-          <input
-            type="range"
-            id="audioVolume"
-            min="0"
-            max="100"
-            value="80"
-            class="volume-slider"
-            aria-label="Volume"
-          />
+          <input type="range" id="audioVolume" min="0" max="100" value="80" class="volume-slider" aria-label="Volume" />
           <span class="material-icons" aria-hidden="true">volume_up</span>
+        </div>
+        <div class="d-none autoplay-toggle">
+          <label class="switch">
+            <input type="checkbox" id="autoplayToggle" />
+            <span class="slider" aria-hidden="true"></span>
+            <span class="label-text">Auto-play</span>
+          </label>
         </div>
 
         <div class="audio-progress-container">
           <div class="progress-time" id="currentTime">০০:০০</div>
           <div class="progress-bar-container">
-            <input
-              type="range"
-              id="audioProgress"
-              min="0"
-              max="100"
-              value="0"
-              class="progress-slider"
-              aria-label="Audio progress"
-            />
+            <input type="range" id="audioProgress" min="0" max="100" value="0" class="progress-slider"
+              aria-label="Audio progress" />
             <div class="progress-fill"></div>
           </div>
           <div class="progress-time" id="totalTime">০০:০০</div>
@@ -517,4 +430,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
