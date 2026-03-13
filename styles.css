@@ -940,7 +940,7 @@ ul {
 }
 
 .audio-mode-dropdown .dropdown-menu {
-  top: calc(100% + 10px) !important;
+  top: calc(100% - 22rem) !important;
   bottom: auto !important;
 }
 
