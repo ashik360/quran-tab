@@ -1430,11 +1430,26 @@ ul {
   padding: 14px 8px;
   border-bottom: 1px solid rgba(253, 224, 71, 0.12);
   color: #f8e7c8;
+  vertical-align: middle;
 }
 
 .prayer-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.05);
 }
+
+.prayer-table tr{
+  text-align: center;
+  justify-content: center;
+}
+
+.prayer-table td:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  transform: translate(30%, 0%);
+}
+
 
 .countdown-cell {
   font-family: monospace;
@@ -1845,6 +1860,10 @@ ul {
     font-size: 0.82rem;
     padding: 10px 4px;
   }
+
+  .prayer-table td:first-child {
+    transform: translate(18%, 0%);
+}
 }
 
 @media (prefers-reduced-motion: reduce) {
