@@ -260,7 +260,7 @@
     { code: "ar.shaatree", label: "Abu Bakr Ash-Shaatree", bn: "আবু বকর আশ-শাত্রী" },
     { code: "ar.ahmedajamy", label: "Ahmed ibn Ali al-Ajamy", bn: "আহমেদ ইবনে আলী আল-আজামী" },
     { code: "ar.alafasy", label: "Alafasy", bn: "আল-আফাসী" },
-    { code: "ar.abdurrahmaansudais", label: "Abdurrahmaan As-Sudais", bn: "আব্দুর রহমান আস-সুদাইস" },
+    // { code: "ar.abdurrahmaansudais", label: "Abdurrahmaan As-Sudais", bn: "আব্দুর রহমান আস-সুদাইস" },
     { code: "ar.abdulbasitmurattal", label: "Abdul Basit (Murattal)", bn: "আব্দুল বাসিত (মুরাত্তাল)" },
     { code: "ar.abdullahbasfar", label: "Abdullah Basfar", bn: "আব্দুল্লাহ বাসফার" },
     { code: "ar.abdulsamad", label: "Abdul Samad", bn: "আব্দুল সামাদ" },
@@ -270,8 +270,17 @@
     { code: "ar.mahermuaiqly", label: "Maher Al Muaiqly", bn: "মাহের আল মুয়াইকলী" },
     { code: "ar.minshawi", label: "Minshawi", bn: "মিনশাবী" },
     { code: "ar.muhammadayyoub", label: "Muhammad Ayyoub", bn: "মুহাম্মদ আইয়ুব" },
-    { code: "ar.muhammadjibreel", label: "Muhammad Jibreel", bn: "মুহাম্মদ জিবরীল" }
-  ];
+    { code: "ar.muhammadjibreel", label: "Muhammad Jibreel", bn: "মুহাম্মদ জিবরীল" },
+
+    // ✅ Newly added
+    { code: "ar.saadghamdi", label: "Saad al-Ghamdi", bn: "সাদ আল-গামদি" },
+    { code: "ar.shuraym", label: "Sa`ud ash-Shuraym", bn: "সাউদ আশ-শুরাইম" },
+
+    // ✅ Non-Arabic with Bangla added
+    { code: "zh.chinese", label: "Chinese", bn: "চাইনিজ" },
+    { code: "fr.leclerc", label: "Youssouf Leclerc (French)", bn: "ইউসুফ লেক্লার্ক (ফরাসি)" },
+    { code: "ru.kuliev-audio", label: "Elmir Kuliev by 1MuslimApp (Russian)", bn: "এলমির কুলিয়েভ (রাশিয়ান)" },
+];
 
   const translations = [
     { code: "bn.bengali", label: "Bangla (Mohiuddin Khan)", bn: "বাংলা (মুহিউদ্দীন খান)" },
@@ -279,8 +288,56 @@
     { code: "en.itani", label: "English (Talal Itani)", bn: "ইংরেজি (তালাল ইতানী)" },
     { code: "en.maududi", label: "English (Maududi)", bn: "ইংরেজি (মওদুদী)" },
     { code: "en.wahiduddin", label: "English (Wahiduddin Khan)", bn: "ইংরেজি (ওয়াহিদুদ্দিন খান)" },
+    { code: 'en.shakir',         label: 'English (Mohammad Habib Shakir)' },
+    { code: 'en.mubarakpuri',    label: 'English (Mubarakpuri)' },
+    { code: 'en.qarai',          label: 'English (Qarai)' },
+    { code: "hi.hindi", label: "Hindi", bn: "হিন্দি" },
+    { code: 'hi.farooq',         label: 'Hindi (Muhammad Farooq Khan and Muhammad Ahmed)' },
     { code: "ur.junagarhi", label: "Urdu (Junagarhi)", bn: "উর্দু (জুনাগড়ী)" },
-    { code: "hi.hindi", label: "Hindi", bn: "হিন্দি" }
+    { code: 'ur.jawadi',         label: 'Urdu (Syed Zeeshan Haider Jawadi)' },
+    { code: 'ur.kanzuliman',     label: 'Urdu (Ahmed Raza Khan)' },
+    { code: 'ur.qadri',          label: 'Urdu (Tahir ul Qadri)' },
+    { code: 'ur.najafi',         label: 'Urdu (محمد حسین نجفی)' },
+    { code: 'ml.karakunnu',      label: 'Malayalam (കാരകുന്ന് & എളയാവൂര്)' },
+    { code: 'ur.maududi',        label: 'Urdu (Abul A\'ala Maududi)' },
+    { code: 'quran-buck',        label: 'Arabic (Buck)' },
+    { code: 'uz.sodik',          label: 'Uzbek (Muhammad Sodik Muhammad Yusuf)' },
+    { code: 'es.cortes',         label: 'Spanish (Julio Cortes)' },
+    { code: 'fa.ansarian',       label: 'Persian (Hussain Ansarian)' },
+    { code: 'bg.theophanov',     label: 'Bulgarian (Tzvetan Theophanov)' },
+    { code: 'bs.mlivo',          label: 'Bosnian (Mustafa Mlivo)' },
+    { code: 'fa.bahrampour',     label: 'Persian (Abolfazl Bahrampour)' },
+    { code: 'es.asad',           label: 'Spanish (Muhammad Asad - Abdurrasak Pérez)' },
+    { code: 'fa.khorramshahi',   label: 'Persian (Baha\'oddin Khorramshahi)' },
+    { code: 'fa.mojtabavi',      label: 'Persian (Sayyed Jalaloddin Mojtabavi)' },
+    { code: 'id.muntakhab',      label: 'Indonesian (Muhammad Quraish Shihab et al.)' },
+    { code: 'ms.basmeih',        label: 'Malay (Abdullah Muhammad Basmeih)' },
+    { code: 'ru.abuadel',        label: 'Russian (Abu Adel)' },
+    { code: 'ru.krachkovsky',    label: 'Russian (Ignaty Yulianovich Krachkovsky)' },
+    { code: 'ru.muntahab',       label: 'Russian (Ministry of Awqaf, Egypt)' },
+    { code: 'ru.sablukov',       label: 'Russian (Gordy Semyonovich Sablukov)' },
+    { code: 'zh.jian',           label: 'Chinese (Ma Jian)' },
+    { code: 'zh.majian',         label: 'Chinese (Ma Jian)' },
+    { code: 'fa.khorramdel',     label: 'Persian (Mostafa Khorramdel)' },
+    { code: 'fa.moezzi',         label: 'Persian (Mohammad Kazem Moezzi)' },
+    { code: 'bs.korkut',         label: 'Bosnian (Besim Korkut)' },
+    { code: 'si.naseemismail',   label: 'Sinhala (Naseem Isamil and Masoor Maulana, Kaleel)' },
+    { code: 'zh.mazhonggang',    label: 'Chinese (马仲刚)' },
+    { code: 'ba.mehanovic',      label: 'Bosnian (Muhamed Mehanovic)' },
+    { code: 'my.ghazi',          label: 'Burmese (Ghazi Muhammed Hashim)' },
+    { code: 'am.sadiq',          label: 'Amharic (ሳዲቅ & ሳኒ ሐቢብ)' },
+    { code: 'ber.mensur',        label: 'Berber (At Mensur)' },
+    { code: 'es.bornez',         label: 'Spanish (Bornez)' },
+    { code: 'es.garcia',         label: 'Spanish (Garcia)' },
+    { code: 'fa.gharaati',       label: 'Persian (قرائتی)' },
+    { code: 'fa.sadeqi',         label: 'Persian (صادقی تهرانی)' },
+    { code: 'fa.safavi',         label: 'Persian (صفوی)' },
+    { code: 'id.jalalayn',       label: 'Indonesian (Tafsir Jalalayn)' },
+    { code: 'nl.leemhuis',       label: 'Dutch (Leemhuis)' },
+    { code: 'nl.siregar',        label: 'Dutch (Siregar)' },
+    { code: 'ps.abdulwali',      label: 'Pashto (عبدالولي)' },
+    { code: 'ru.kuliev-alsaadi', label: 'Russian (Кулиев + ас-Саади)' },
+    { code: 'ce.magomedov',      label: 'Chechen (Chechen by Magomedov)' }
   ];
 
   const azanAudio = new Audio(
